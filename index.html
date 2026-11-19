@@ -607,6 +607,9 @@ async function connectWith(w){
     $("disconnectBtn").classList.remove("hidden");
     status(`Connected to ${esc(w.name)}.`, "ok");
     refreshPickers();
+    // If a scan is already on screen, re-run it for the connected wallet so cleanup buttons unlock
+    const typed = $("addrInput").value.trim();
+    if (!$("results").classList.contains("hidden") && (!typed || typed === state.owner.toBase58())){ $("addrInput").value = ""; scan(); }
   } catch(e){ status("Connection cancelled or failed: " + esc(e.message||e), "err"); }
 }
 async function disconnect(){
@@ -831,6 +834,8 @@ function render(owner, lamports, solPrice){
     ? `${empties.length} empty accounts · ${sol(reclaimLamports)} SOL back to you · ${Math.ceil(empties.length/BATCH.close)} transaction(s)`
     : "No empty accounts — nothing to reclaim.";
   $("reclaimBtn").disabled = !empties.length || !canAct;
+  const lockMsg = !state.owner ? " · Connect this wallet to reclaim" : !canAct ? " · This isn't your connected wallet — clear the address box and scan again" : "";
+  if (lockMsg && empties.length) $("reclaimInfo").textContent += lockMsg;
 
   $("delegPanel").classList.toggle("hidden", !delegs.length);
   $("delegTable").innerHTML = `<tr><th><input type="checkbox" class="check" id="delegAll" checked title="Select all"></th><th>Token</th><th>Approved to</th><th>Type</th><th class="num">Amount allowed</th></tr>` +
@@ -861,7 +866,9 @@ function render(owner, lamports, solPrice){
     }).join("");
   updateBurnInfo();
   $("burnBtn").disabled = !canAct;
-  if (!canAct) status("Read-only scan. Connect this wallet to clean it up.", "");
+  if (!canAct) status(state.owner
+    ? `Read-only scan of ${esc(short(owner.toBase58()))}. You're connected as ${esc(short(state.owner.toBase58()))} — to clean up your own wallet, clear the address box and press Scan.`
+    : "Read-only scan. Connect this wallet to clean it up.", "");
 }
 function selectedBurns(){ return [...document.querySelectorAll("[data-burn]:checked")].map(el => state.tokens[+el.dataset.burn]); }
 function selectedDelegs(){ return [...document.querySelectorAll("[data-deleg]:checked")].map(el => state.delegs[+el.dataset.deleg]); }
