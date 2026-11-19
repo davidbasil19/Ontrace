@@ -2,6 +2,11 @@
 
 All notable changes to OnTrace are listed here.
 
+## [1.0.1] — 2026-11-19
+
+### Improved
+- Trending now checks each token's on-chain creator permissions (mint authority, freeze authority, Token-2022 extensions) and shows the main reason under each rating.
+
 ## [1.0.0] — 2026-11-19
 
 First public release.

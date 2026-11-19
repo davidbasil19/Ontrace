@@ -1109,7 +1109,13 @@ async function loadTrending(){
     const boosted = new Set((Array.isArray(boosts)?boosts:[]).filter(b=>b.chainId==="solana").map(b=>b.tokenAddress));
     const mints = [...new Set([...(Array.isArray(boosts)?boosts:[]), ...(Array.isArray(profiles)?profiles:[])].filter(x=>x.chainId==="solana").map(x=>x.tokenAddress))];
     const markets = await fetchMarkets(mints);
-    state.trend = mints.filter(m=>markets[m]).map(m => ({ mint:m, boosted: boosted.has(m), ...markets[m], risk: assess(m, markets[m], null) }));
+    let infos = {};
+    if (!needsRpc()) { try { infos = await fetchMintInfo(conn(), mints.filter(m => markets[m])); } catch(e){ console.warn("mint info", e); } }
+    state.trend = mints.filter(m=>markets[m]).map(m => {
+      const r = assess(m, markets[m], infos[m] || null);
+      if (!infos[m] && !TRUSTED[m] && r.level === 0) r.reasons = ["Market looks normal — creator permissions not checked (open Check)"];
+      return { mint:m, boosted: boosted.has(m), ...markets[m], risk: r };
+    });
     renderTrending();
   } catch(e){ $("trendTable").innerHTML = `<tr><td class="status err">Could not load trending: ${esc(e.message||e)}</td></tr>`; }
   finally { $("trendBtn").disabled = false; }
@@ -1122,7 +1128,7 @@ function renderTrending(){
       <td><span class="tokname">${esc(t.symbol)}</span> ${t.boosted?`<span class="badge bp">Boosted</span>`:""}<div class="mono">${esc(t.name)}</div></td>
       <td class="num">${usd(t.mcap)}</td><td class="num">${usd(t.vol24)}</td><td class="num">${pct(t.chg24)}</td>
       <td class="num hide-sm">${usd(t.liq)}</td><td class="num hide-sm">${ageStr(t.created)}</td>
-      <td>${badge(t.risk)}</td>
+      <td>${badge(t.risk)}<div class="reasons">${esc(t.risk.reasons[0])}</div></td>
       <td><a href="${esc(t.url)}" target="_blank" rel="noopener">Chart</a> · <a href="#" data-checkmint="${esc(t.mint)}">Check</a> · <a href="#" data-swapmint="${esc(t.mint)}">Swap</a></td>
     </tr>`).join("") : `<tr><td class="mono">No Solana tokens in the feed right now.</td></tr>`);
 }
