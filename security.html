@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security — OnTrace</title>
+<meta name="description" content="What OnTrace can and can&#x27;t do with your wallet, and how it keeps you safe.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="Security — OnTrace">
+<meta property="og:description" content="What OnTrace can and can&#x27;t do with your wallet, and how it keeps you safe.">
+<meta property="og:image" content="https://ontrace.space/banner.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@0ntrace">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#000;--panel:#0d0d0d;--panel2:#151515;--line:#262626;--text:#f2f2f2;--muted:#9a9a9a;--accent:#b6ff3b;--accent2:#ff3bd4}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  a{color:var(--accent2)}
+  .wrap{max-width:860px;margin:0 auto;padding:20px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 18px;border:1px solid var(--line);border-radius:16px;margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}
+  .brand img{width:44px;height:44px}
+  .wordmark{font-family:"Orbitron",system-ui,sans-serif;font-weight:800;font-size:22px;letter-spacing:3px}
+  .cta{background:var(--accent);color:#000;text-decoration:none;font-weight:700;padding:9px 16px;border-radius:10px;font-size:14px}
+  .cta:hover{box-shadow:0 0 16px rgba(182,255,59,.45)}
+  h1{font-family:"Orbitron",system-ui,sans-serif;font-size:30px;letter-spacing:.5px;margin:6px 0 6px}
+  .sub{color:var(--muted);margin:0 0 24px}
+  h2{font-family:"Orbitron",system-ui,sans-serif;font-size:17px;letter-spacing:.5px;color:var(--accent);margin:34px 0 10px}
+  h3{font-size:16px;margin:22px 0 6px}
+  p,li{color:#d6d6d6}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .warn{border-color:var(--accent2)}
+  details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:10px 0}
+  details[open]{border-color:#3a3a3a}
+  summary{cursor:pointer;font-weight:700;color:var(--text)}
+  details p,details ul{margin:10px 0 2px}
+  code{background:var(--panel2);padding:1px 6px;border-radius:6px;font-size:13px}
+  .toc{display:flex;flex-wrap:wrap;gap:8px}
+  .toc a{border:1px solid var(--line);border-radius:999px;padding:4px 12px;text-decoration:none;color:var(--muted);font-size:13px}
+  .toc a:hover{color:var(--text);border-color:var(--accent)}
+  footer{color:var(--muted);font-size:13px;text-align:center;padding:30px 0 40px;border-top:1px solid var(--line);margin-top:40px}
+  footer a{color:var(--muted);margin:0 8px}
+  @media (max-width:640px){h1{font-size:23px} .wordmark{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./"><img src="logo.png" alt="OnTrace logo" width="44" height="44"><span class="wordmark">ONTRACE</span></a>
+    <a class="cta" href="./">Open the app</a>
+  </header>
+  <main>
+
+    <h1>Security</h1>
+    <p class="sub">OnTrace is a wallet tool, so security is the product. Here's exactly what it can and can't do.</p>
+
+    <div class="card warn"><strong>OnTrace will never ask for your seed phrase, DM you first, or ask you to "validate", "sync" or "recover" your wallet.</strong> Our only official places are <strong>ontrace.space</strong>, <a href="https://x.com/0ntrace">@0ntrace</a> on X and <a href="mailto:team@ontrace.space">team@ontrace.space</a>.</div>
+
+    <h2>What OnTrace can do</h2>
+    <ul>
+      <li><strong>Read public blockchain data</strong> — balances, token accounts, token settings and transaction history.</li>
+      <li><strong>Read public market data</strong> from DexScreener and swap quotes from Jupiter.</li>
+      <li><strong>Ask your wallet to sign</strong> transactions that <em>you</em> start. Your wallet shows each one for approval.</li>
+    </ul>
+
+    <h2>What OnTrace cannot do</h2>
+    <ul>
+      <li>See, store or ask for your seed phrase or private key.</li>
+      <li>Move funds without your wallet's approval.</li>
+      <li>Sign anything in the background.</li>
+      <li>Track you — there is no server, database, account system or analytics.</li>
+    </ul>
+
+    <h2>Exactly what each action does</h2>
+    <table>
+      <tr><th>Action</th><th>What gets sent to Solana</th></tr>
+      <tr><td>Scan, check, watch, trace, inspect</td><td>Nothing — read-only, no signature</td></tr>
+      <tr><td>Reclaim SOL</td><td>Close account, only on <em>empty</em> token accounts you own</td></tr>
+      <tr><td>Burn junk</td><td>Burn + close account, only on tokens you tick</td></tr>
+      <tr><td>Revoke approvals</td><td>Revoke, only on approvals you tick</td></tr>
+      <tr><td>Unwrap SOL</td><td>Close your wrapped-SOL account</td></tr>
+      <tr><td>Swap</td><td>The swap transaction Jupiter builds for the quote you saw</td></tr>
+      <tr><td>Multi-send</td><td>Transfers to the addresses you entered (plus creating their token accounts if needed)</td></tr>
+      <tr><td>Create token</td><td>Create the token, mint the supply to you, and optionally lock supply / metadata. No freeze authority is ever set.</td></tr>
+    </table>
+    <p>Cleanup instructions were verified byte-for-byte against Solana's official token library.</p>
+
+    <h2>Built-in protections</h2>
+    <ul>
+      <li><strong>Confirmation step</strong> before burns, multi-sends and token creation.</li>
+      <li><strong>Risk acknowledgement</strong> before swapping into tokens rated High risk or Likely scam.</li>
+      <li><strong>Drainer detection</strong> in the Transaction inspector: it flags ownership hand-overs, new spending approvals, accounts closed to someone else and unknown programs.</li>
+      <li><strong>Safe display</strong>: token names from outside sources are cleaned before showing, so a malicious token name can't inject anything into the page.</li>
+      <li><strong>Local-only storage</strong>: your watchlist and settings never leave your browser.</li>
+    </ul>
+
+    <h2>Open source</h2>
+    <p>The full site is published on <a href="https://github.com/davidbasil19/Ontrace">GitHub</a>. What you read there is what runs here. The detailed technical security notes are in <a href="https://github.com/davidbasil19/Ontrace/blob/main/SECURITY.md">SECURITY.md</a>.</p>
+
+    <h2>Staying safe anywhere on Solana</h2>
+    <ul>
+      <li>Read what your wallet shows before you approve anything.</li>
+      <li>Ignore airdropped tokens that link to "claim" sites — they're usually drainers. Burn them with OnTrace.</li>
+      <li>Check unknown tokens with the Token checker before buying.</li>
+      <li>Revoke approvals you don't recognise.</li>
+      <li>Use a separate wallet for trying new apps.</li>
+    </ul>
+
+    <h2 id="report">Report a vulnerability</h2>
+    <p>Please report security issues <strong>privately</strong> to <a href="mailto:team@ontrace.space">team@ontrace.space</a> with a description, steps to reproduce and any transaction signatures or screenshots. Please don't post security issues publicly. We aim to reply within 72 hours.</p>
+
+  </main>
+  <footer>
+    <div><a href="./">App</a><a href="faq.html">FAQ</a><a href="security.html">Security</a><a href="terms.html">Terms &amp; Privacy</a><a href="https://github.com/davidbasil19/Ontrace" target="_blank" rel="noopener">GitHub</a></div>
+    <div style="margin-top:10px"><a href="https://x.com/0ntrace" target="_blank" rel="noopener">@0ntrace</a> · <a href="mailto:team@ontrace.space">team@ontrace.space</a></div>
+    <div style="margin-top:10px">© 2026 OnTrace · ontrace.space</div>
+  </footer>
+</div>
+</body>
+</html>

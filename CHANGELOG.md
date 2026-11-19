@@ -2,6 +2,16 @@
 
 All notable changes to OnTrace are listed here.
 
+## [1.1.0] — 2026-11-19
+
+### Added
+- **Front page intro**: what OnTrace does, six feature cards that jump to each tool, trust points and a "Scan my wallet" button. Can be hidden (and brought back from the footer).
+- **Wallet picker**: a proper connect dialog listing detected wallets.
+- **Mobile support**: on phones with no wallet injected, "Open in Phantom" and "Open in Solflare" buttons open OnTrace inside the wallet's browser. On desktop, install links are shown.
+- **FAQ**, **Security** and **Terms & Privacy** pages, linked from the footer.
+- Footer links to GitHub and the new pages.
+- Deep links to tools via the URL, e.g. `ontrace.space/#swap`.
+
 ## [1.0.1] — 2026-11-19
 
 ### Improved

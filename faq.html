@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ — OnTrace</title>
+<meta name="description" content="Answers to common questions about OnTrace, the free Solana toolbox.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="FAQ — OnTrace">
+<meta property="og:description" content="Answers to common questions about OnTrace, the free Solana toolbox.">
+<meta property="og:image" content="https://ontrace.space/banner.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@0ntrace">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#000;--panel:#0d0d0d;--panel2:#151515;--line:#262626;--text:#f2f2f2;--muted:#9a9a9a;--accent:#b6ff3b;--accent2:#ff3bd4}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  a{color:var(--accent2)}
+  .wrap{max-width:860px;margin:0 auto;padding:20px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 18px;border:1px solid var(--line);border-radius:16px;margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}
+  .brand img{width:44px;height:44px}
+  .wordmark{font-family:"Orbitron",system-ui,sans-serif;font-weight:800;font-size:22px;letter-spacing:3px}
+  .cta{background:var(--accent);color:#000;text-decoration:none;font-weight:700;padding:9px 16px;border-radius:10px;font-size:14px}
+  .cta:hover{box-shadow:0 0 16px rgba(182,255,59,.45)}
+  h1{font-family:"Orbitron",system-ui,sans-serif;font-size:30px;letter-spacing:.5px;margin:6px 0 6px}
+  .sub{color:var(--muted);margin:0 0 24px}
+  h2{font-family:"Orbitron",system-ui,sans-serif;font-size:17px;letter-spacing:.5px;color:var(--accent);margin:34px 0 10px}
+  h3{font-size:16px;margin:22px 0 6px}
+  p,li{color:#d6d6d6}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+  .warn{border-color:var(--accent2)}
+  details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:10px 0}
+  details[open]{border-color:#3a3a3a}
+  summary{cursor:pointer;font-weight:700;color:var(--text)}
+  details p,details ul{margin:10px 0 2px}
+  code{background:var(--panel2);padding:1px 6px;border-radius:6px;font-size:13px}
+  .toc{display:flex;flex-wrap:wrap;gap:8px}
+  .toc a{border:1px solid var(--line);border-radius:999px;padding:4px 12px;text-decoration:none;color:var(--muted);font-size:13px}
+  .toc a:hover{color:var(--text);border-color:var(--accent)}
+  footer{color:var(--muted);font-size:13px;text-align:center;padding:30px 0 40px;border-top:1px solid var(--line);margin-top:40px}
+  footer a{color:var(--muted);margin:0 8px}
+  @media (max-width:640px){h1{font-size:23px} .wordmark{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./"><img src="logo.png" alt="OnTrace logo" width="44" height="44"><span class="wordmark">ONTRACE</span></a>
+    <a class="cta" href="./">Open the app</a>
+  </header>
+  <main>
+
+    <h1>FAQ</h1>
+    <p class="sub">Everything people ask about OnTrace, in plain English.</p>
+    <div class="toc"><a href="#basics">Basics</a><a href="#safety">Safety</a><a href="#tools">Tools</a><a href="#mobile">Mobile</a><a href="#trouble">Troubleshooting</a></div>
+
+    <h2 id="basics">Basics</h2>
+    <details open><summary>What is OnTrace?</summary><p>A free toolbox for Solana wallets. It scans your wallet for scam tokens, gets back SOL locked in empty accounts, lets you swap, send to many wallets and create tokens, and helps you investigate wallets, token developers and transactions.</p></details>
+    <details><summary>Is it free?</summary><p>Yes. OnTrace charges no fees. You only pay Solana's normal network fees (fractions of a cent) when you send a transaction.</p></details>
+    <details><summary>Do I need an account?</summary><p>No. There's no sign-up. Connect your wallet when you want to take an action, or paste any address for a read-only scan.</p></details>
+    <details><summary>Which wallets work?</summary><p>Phantom, Solflare and Backpack. Other wallets that inject a standard Solana provider may also work.</p></details>
+    <details><summary>Who runs OnTrace?</summary><p>An independent team. Reach us on X at <a href="https://x.com/0ntrace">@0ntrace</a> or by email at <a href="mailto:team@ontrace.space">team@ontrace.space</a>.</p></details>
+
+    <h2 id="safety">Safety</h2>
+    <details open><summary>Can OnTrace take my funds?</summary><p>No. OnTrace can only <em>ask</em> your wallet to sign a transaction you started. Your wallet shows every transaction before you approve it. OnTrace never sees your seed phrase or private key.</p></details>
+    <details><summary>Will OnTrace ever ask for my seed phrase?</summary><p><strong>Never.</strong> Anyone asking for your seed phrase — including someone claiming to be OnTrace support — is trying to steal from you.</p></details>
+    <details><summary>Is the code public?</summary><p>Yes. The entire site is on <a href="https://github.com/davidbasil19/Ontrace">GitHub</a>, so anyone can check exactly what it does. What you see there is what runs at ontrace.space.</p></details>
+    <details><summary>What data do you collect?</summary><p>None. OnTrace has no server, database or analytics. Your watchlist and settings are stored only in your own browser. See <a href="terms.html#privacy">Privacy</a>.</p></details>
+    <details><summary>How do I know I'm on the real site?</summary><p>Check the address bar says <strong>ontrace.space</strong> with a padlock. Bookmark it. Our only accounts are @0ntrace on X and team@ontrace.space.</p></details>
+
+    <h2 id="tools">Tools</h2>
+    <details><summary>What does "Reclaim SOL" do?</summary><p>Every token account on Solana holds a small deposit (about 0.002 SOL). When an account is empty, that SOL just sits there. OnTrace closes empty accounts and sends the deposits back to you. Accounts with tokens in them are never touched. Some wallets have hundreds of empty accounts — we've seen over 1.6 SOL in a single wallet.</p></details>
+    <details><summary>How are tokens rated?</summary><p>OnTrace combines live market data (liquidity, market cap, trading activity, age) with the token's on-chain settings (whether the creator can freeze your tokens, mint more, or move tokens out of wallets). Ratings run from <strong>Safe</strong> to <strong>Likely scam</strong>, with the reasons listed. Full rules are on <a href="https://github.com/davidbasil19/Ontrace/blob/main/docs/RISK-ENGINE.md">GitHub</a>.</p></details>
+    <details><summary>Is a "Safe" rating a guarantee?</summary><p>No. Ratings are automated signals that catch common scam patterns. They can't catch everything, and they aren't financial advice. Always do your own research.</p></details>
+    <details><summary>What happens when I burn a token?</summary><p>The tokens are destroyed permanently and the account's deposit is returned to you. OnTrace shows the estimated value being destroyed and asks you to confirm first. It can't be undone.</p></details>
+    <details><summary>Where do swaps come from?</summary><p>Swaps are routed by Jupiter, which finds the best price across Solana's exchanges. OnTrace checks the token you're buying and warns you if it looks risky.</p></details>
+    <details><summary>Can I create a token that people trust?</summary><p>Yes. Tokens made with OnTrace have no freeze authority (nobody can freeze holders), and you can lock the supply so no more can ever be minted. To make it tradeable you'll still need to add a liquidity pool on Raydium or Meteora.</p></details>
+    <details><summary>How do alerts work?</summary><p>Add wallets to your Watchlist and press Start alerts. OnTrace checks them every 30 seconds and notifies you of buys, sells, swaps or big moves. Alerts run while OnTrace is open in a browser tab.</p></details>
+    <details><summary>What is the Transaction inspector?</summary><p>Paste a transaction signature to see what happened in plain English, or paste an unsigned transaction to simulate it before signing. It flags wallet-drainer tricks like handing over ownership of your token accounts.</p></details>
+
+    <h2 id="mobile">Mobile</h2>
+    <details open><summary>How do I use OnTrace on my phone?</summary><p>Phone wallets connect inside their own built-in browser. Open ontrace.space and tap <strong>Connect wallet</strong> — you'll get buttons to open OnTrace inside Phantom or Solflare. Or open your wallet app, find its browser (Phantom: the compass/browser icon; Solflare: Explore) and go to <strong>ontrace.space</strong>.</p></details>
+
+    <h2 id="trouble">Troubleshooting</h2>
+    <details><summary>My wallet won't connect.</summary><ul><li>Make sure your wallet extension is installed and unlocked, then reload.</li><li>On a phone, open OnTrace inside your wallet's browser (see Mobile).</li><li>Check the network menu: use Mainnet for real funds, Devnet only for testing.</li></ul></details>
+    <details><summary>A transaction failed.</summary><p>Usually the network was busy. Try again, or raise the priority fee in Settings. If you were swapping a fast-moving token, increase slippage or refresh the quote.</p></details>
+    <details><summary>Something looks wrong.</summary><p>Email <a href="mailto:team@ontrace.space">team@ontrace.space</a> with a screenshot and, if possible, the transaction signature. For security issues, see <a href="security.html#report">Security</a>.</p></details>
+
+  </main>
+  <footer>
+    <div><a href="./">App</a><a href="faq.html">FAQ</a><a href="security.html">Security</a><a href="terms.html">Terms &amp; Privacy</a><a href="https://github.com/davidbasil19/Ontrace" target="_blank" rel="noopener">GitHub</a></div>
+    <div style="margin-top:10px"><a href="https://x.com/0ntrace" target="_blank" rel="noopener">@0ntrace</a> · <a href="mailto:team@ontrace.space">team@ontrace.space</a></div>
+    <div style="margin-top:10px">© 2026 OnTrace · ontrace.space</div>
+  </footer>
+</div>
+</body>
+</html>

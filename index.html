@@ -99,6 +99,33 @@
   .warnbox{border:1px solid var(--high);background:rgba(249,115,22,.08);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13px}
   .note{color:var(--muted);font-size:12px;margin-top:8px}
   @media (max-width:640px){ .hide-sm{display:none} }
+  /* intro */
+  .intro{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;margin-bottom:18px}
+  .intro h1{font-family:"Orbitron",system-ui,sans-serif;font-size:28px;line-height:1.2;margin:0 0 8px;letter-spacing:.5px}
+  .intro h1 span{color:var(--accent)}
+  .intro p.lead{color:var(--muted);font-size:15px;margin:0 0 16px;max-width:760px}
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+  @media (max-width:860px){ .feat-grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:520px){ .feat-grid{grid-template-columns:1fr} }
+  .feat{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .15s}
+  .feat:hover{border-color:var(--accent)}
+  .feat .ic{font-size:22px} .feat h3{font-family:"Orbitron",system-ui,sans-serif;font-size:13px;letter-spacing:.6px;margin:6px 0 4px;color:var(--accent)}
+  .feat p{margin:0;color:var(--muted);font-size:13px}
+  .trust{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--text);font-size:13px}
+  .trust span:before{content:"✓ ";color:var(--accent);font-weight:800}
+  a.btnlink{display:inline-block;padding:10px 16px;border:1px solid var(--accent2);border-radius:10px;color:var(--text);text-decoration:none;font-weight:700;font-size:14px}
+  .linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;padding:0;font-weight:500;font-size:12px;cursor:pointer}
+  .linkbtn:hover{box-shadow:none !important;color:var(--text)}
+  .footlinks{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-size:13px}
+  .footlinks a{color:var(--muted)} .footlinks a:hover{color:var(--text)}
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .modal-box{background:var(--panel);border:1px solid var(--line);border-top:2px solid var(--accent);border-radius:16px;padding:22px;width:100%;max-width:400px}
+  .modal-box h2{font-family:"Orbitron",system-ui,sans-serif;font-size:16px;margin:0 0 6px}
+  .wallet-btn{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:10px;background:var(--panel2);color:var(--text);border:1px solid var(--line);text-decoration:none;border-radius:12px;padding:13px 15px;font-weight:700;font-size:15px}
+  .wallet-btn:hover{border-color:var(--accent);box-shadow:0 0 12px rgba(182,255,59,.2) !important}
+  .wallet-btn small{color:var(--muted);font-weight:500}
+  @media (max-width:640px){ .intro{padding:18px} .intro h1{font-size:21px} }
 </style>
 </head>
 <body>
@@ -132,6 +159,26 @@
       <button id="disconnectBtn" class="secondary hidden">Disconnect</button>
     </div>
   </header>
+
+  <section id="intro" class="intro">
+    <h1>Know what's in your wallet. <span>Trace it before you trust it.</span></h1>
+    <p class="lead">OnTrace is a free Solana toolbox. Scan your wallet for scam tokens, get back SOL locked in empty accounts, trade and send safely, launch tokens with fair defaults, and see who's really behind a coin — all in one place.</p>
+    <div class="row" style="flex-wrap:wrap">
+      <button id="introScan" style="flex:0 0 auto">Scan my wallet</button>
+      <a class="btnlink" href="security.html" style="flex:0 0 auto">How OnTrace keeps you safe</a>
+      <div></div>
+      <button id="introHide" class="linkbtn" style="flex:0 0 auto">Hide intro</button>
+    </div>
+    <div class="feat-grid">
+      <div class="feat" data-go="scan"><div class="ic">🧹</div><h3>CLEAN</h3><p>Reclaim locked SOL, burn spam tokens, revoke risky approvals.</p></div>
+      <div class="feat" data-go="check"><div class="ic">🛡️</div><h3>PROTECT</h3><p>Every token rated Safe to Likely scam — with the reasons why.</p></div>
+      <div class="feat" data-go="swap"><div class="ic">⚡</div><h3>TRADE</h3><p>Best-price swaps via Jupiter, with a safety check before you buy.</p></div>
+      <div class="feat" data-go="create"><div class="ic">🚀</div><h3>LAUNCH</h3><p>Create tokens that can't be frozen, with supply you can lock.</p></div>
+      <div class="feat" data-go="dev"><div class="ic">🕵️</div><h3>TRACK</h3><p>Watch wallets, get alerts, trace devs and map wallet connections.</p></div>
+      <div class="feat" data-go="inspect"><div class="ic">🔍</div><h3>INSPECT</h3><p>Decode any transaction and catch wallet drainers before you sign.</p></div>
+    </div>
+    <div class="trust"><span>Never asks for your seed phrase</span><span>Nothing signs without your approval</span><span>Open source</span><span>No fees</span></div>
+  </section>
 
   <div id="status" class="status hidden"></div>
 
@@ -414,8 +461,21 @@
       <a href="mailto:team@ontrace.space" aria-label="Email OnTrace">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5h20v14H2V5zm2 2v.5l8 5 8-5V7H4zm16 2.85-8 5-8-5V17h16V9.85z"/></svg>team@ontrace.space</a>
     </div>
+    <div class="footlinks">
+      <a href="faq.html">FAQ</a><a href="security.html">Security</a><a href="terms.html">Terms &amp; Privacy</a>
+      <a href="https://github.com/davidbasil19/Ontrace" target="_blank" rel="noopener">GitHub</a>
+      <button id="introShow" class="linkbtn">What is OnTrace?</button>
+    </div>
     <div class="copyright">© 2026 OnTrace · ontrace.space</div>
   </footer>
+  <div id="walletModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="wmTitle">
+    <div class="modal-box">
+      <h2 id="wmTitle">Connect a wallet</h2>
+      <p class="note" id="wmSub" style="margin:0"></p>
+      <div id="wmList"></div>
+      <div class="row" style="margin-top:14px"><div class="note" style="margin:0">OnTrace never asks for your seed phrase.</div><button id="wmClose" class="secondary small" style="flex:0 0 auto">Close</button></div>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -506,14 +566,39 @@ function detectWallets(){
   if (!list.length && window.solana) list.push({ name:"Wallet", p:window.solana });
   return list;
 }
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+function openWalletModal(){
+  const ws = detectWallets();
+  const here = encodeURIComponent(location.href), ref = encodeURIComponent(location.origin);
+  let html = "";
+  if (ws.length){
+    $("wmSub").textContent = "Choose a wallet to connect.";
+    html = ws.map((w,i) => `<button class="wallet-btn" data-wallet="${i}">${esc(w.name)} <small>Detected</small></button>`).join("");
+  } else if (isMobile){
+    $("wmSub").textContent = "On phones, wallets connect inside their own app browser. Tap your wallet to open OnTrace there.";
+    html = `<a class="wallet-btn" href="https://phantom.app/ul/browse/${here}?ref=${ref}">Open in Phantom <small>→</small></a>
+            <a class="wallet-btn" href="https://solflare.com/ul/v1/browse/${here}?ref=${ref}">Open in Solflare <small>→</small></a>
+            <p class="note">Using Backpack or another wallet? Open its built-in browser and go to <strong>ontrace.space</strong>.</p>`;
+  } else {
+    $("wmSub").textContent = "No Solana wallet found in this browser. Install one, then reload this page.";
+    html = `<a class="wallet-btn" href="https://phantom.com/download" target="_blank" rel="noopener">Get Phantom <small>↗</small></a>
+            <a class="wallet-btn" href="https://solflare.com/download" target="_blank" rel="noopener">Get Solflare <small>↗</small></a>
+            <a class="wallet-btn" href="https://backpack.app/download" target="_blank" rel="noopener">Get Backpack <small>↗</small></a>`;
+  }
+  $("wmList").innerHTML = html;
+  $("walletModal").classList.remove("hidden");
+  $("wmList").querySelectorAll("[data-wallet]").forEach(b => b.onclick = () => { closeWalletModal(); connectWith(ws[+b.dataset.wallet]); });
+}
+function closeWalletModal(){ $("walletModal").classList.add("hidden"); }
+$("wmClose").onclick = closeWalletModal;
+$("walletModal").addEventListener("click", e => { if (e.target.id === "walletModal") closeWalletModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeWalletModal(); });
 async function connect(){
   const ws = detectWallets();
-  if (!ws.length){ status('No Solana wallet found. Install <a href="https://phantom.com" target="_blank" rel="noopener">Phantom</a>, Solflare or Backpack, then reload.', "err"); return; }
-  let w = ws[0];
-  if (ws.length > 1){
-    const pick = prompt("Choose wallet:\n" + ws.map((x,i)=>`${i+1}. ${x.name}`).join("\n"), "1");
-    const i = parseInt(pick,10)-1; if (ws[i]) w = ws[i];
-  }
+  if (ws.length === 1) return connectWith(ws[0]);
+  openWalletModal();
+}
+async function connectWith(w){
   try {
     await w.p.connect();
     const pk = w.p.publicKey; if (!pk) throw new Error("Wallet did not return an address");
@@ -1606,6 +1691,16 @@ $("disconnectBtn").onclick = disconnect;
 $("scanBtn").onclick = scan;
 $("addrInput").addEventListener("keydown", e => { if (e.key === "Enter") scan(); });
 $("mintInput").addEventListener("keydown", e => { if (e.key === "Enter") $("checkBtn").click(); });
+/* intro */
+function setIntro(show){ $("intro").classList.toggle("hidden", !show); store.set("ontrace_intro_hidden", show ? "" : "1"); }
+if (store.get("ontrace_intro_hidden") === "1") $("intro").classList.add("hidden");
+$("introHide").onclick = () => setIntro(false);
+$("introShow").onclick = () => { setIntro(true); window.scrollTo({ top:0, behavior:"smooth" }); };
+$("introScan").onclick = () => { showTab("scan"); if (!state.owner) connect(); else scan(); $("tab-scan").scrollIntoView({ behavior:"smooth", block:"start" }); };
+document.querySelectorAll(".feat[data-go]").forEach(f => f.onclick = () => { showTab(f.dataset.go); document.querySelector(".tabs").scrollIntoView({ behavior:"smooth", block:"start" }); });
+/* open a tab from the URL hash, e.g. ontrace.space/#swap */
+const hashTab = location.hash.slice(1);
+if (TABS.includes(hashTab)) showTab(hashTab);
 showRpc(); fillTokenSelects(); rpcNotice();
 </script>
 </body>

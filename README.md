@@ -20,6 +20,7 @@
 ## Table of contents
 
 - [What is OnTrace?](#what-is-ontrace)
+- [Pages](#pages)
 - [Why it exists](#why-it-exists)
 - [Features](#features)
   - [Portfolio & cleanup](#1-portfolio--cleanup)
@@ -60,6 +61,17 @@ OnTrace is a free, browser-based toolbox for Solana users. It brings the everyda
 - **Investigate** — watch wallets, get alerts, trace token developers, map wallet relationships, and decode transactions before you sign them.
 
 Everything runs **in your browser**. There is no OnTrace server, no account, no sign-up, and no fees. OnTrace never sees your seed phrase, and nothing happens without your wallet's approval.
+
+## Pages
+
+| Page | URL |
+|---|---|
+| App | https://ontrace.space |
+| FAQ | https://ontrace.space/faq.html |
+| Security | https://ontrace.space/security.html |
+| Terms & Privacy | https://ontrace.space/terms.html |
+
+Tools can be linked directly with a hash, e.g. `https://ontrace.space/#swap`, `#check`, `#trending`, `#inspect`.
 
 ## Why it exists
 
@@ -253,6 +265,9 @@ Full details: [docs/RISK-ENGINE.md](docs/RISK-ENGINE.md).
 ```
 ontrace/
 ├── index.html              # The entire app (UI, styles, logic)
+├── faq.html                # Frequently asked questions
+├── security.html           # Plain-English security page
+├── terms.html              # Terms of use and privacy policy
 ├── logo.png                # Logo mark (transparent)
 ├── favicon.png             # Browser tab icon
 ├── apple-touch-icon.png    # Home-screen icon
@@ -337,7 +352,7 @@ Before any major release, run through the app end-to-end on **devnet** with a th
 - **Explanations** are rule-based, not AI-generated. Complex DeFi transactions may get a general description.
 - **Simulator** can't decode unsigned transactions in Solana's newest (version 1) format yet — inspect them by signature after they're sent.
 - **Dev tracker** reads up to 15,000 transactions to find a creator; for busier tokens, paste the dev wallet manually.
-- **Mobile**: wallets inject into their own in-app browsers. Open ontrace.space inside Phantom or Solflare on mobile.
+- **Mobile**: wallets inject into their own in-app browsers. On phones, the Connect button offers "Open in Phantom / Solflare"; other wallets can open ontrace.space in their built-in browser.
 - Wallets supported: Phantom, Solflare, Backpack (others that expose `window.solana` may work).
 - The intelligence tools make many RPC calls; heavy public use needs a paid RPC plan.
 
@@ -345,10 +360,12 @@ Before any major release, run through the app end-to-end on **devnet** with a th
 
 ## Roadmap
 
+**Done**
+- ✅ "Open in Phantom / Solflare" buttons for mobile
+- ✅ Front page intro, FAQ, Security and Terms & Privacy pages
+
 **Next**
-- "Open in Phantom / Solflare" buttons for mobile
 - Wallet Standard support (OKX, Coinbase Wallet and more)
-- Landing section, FAQ, security and terms pages
 - Optional platform fee on swaps to fund development
 
 **Phase 3**
@@ -381,7 +398,7 @@ Usually because their market cap looks fake (huge valuation, tiny liquidity, alm
 Yes. It's stored only in your browser and never sent anywhere except the RPC calls needed to read public blockchain data.
 
 **Does it work on my phone?**
-Open ontrace.space inside your wallet app's built-in browser (Phantom → browser icon, Solflare → Explore).
+Yes. Tap **Connect wallet** on your phone and choose "Open in Phantom" or "Open in Solflare" — OnTrace opens inside the wallet's browser. More answers on the [FAQ page](https://ontrace.space/faq.html).
 
 ---
 
