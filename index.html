@@ -155,7 +155,7 @@
         <option value="mainnet-beta">Mainnet</option>
         <option value="devnet">Devnet (testing)</option>
       </select>
-      <button id="connectBtn">Connect wallet</button>
+      <button id="connectBtn" disabled>Loading…</button>
       <button id="disconnectBtn" class="secondary hidden">Disconnect</button>
     </div>
   </header>
@@ -1702,6 +1702,18 @@ document.querySelectorAll(".feat[data-go]").forEach(f => f.onclick = () => { sho
 const hashTab = location.hash.slice(1);
 if (TABS.includes(hashTab)) showTab(hashTab);
 showRpc(); fillTokenSelects(); rpcNotice();
+$("connectBtn").disabled = false; $("connectBtn").textContent = "Connect wallet";
+</script>
+<script>
+  /* If the app's libraries fail to load (very slow or blocked connection), say so instead of sitting on "Loading…". */
+  setTimeout(function(){
+    var b = document.getElementById("connectBtn");
+    if (b && b.disabled) {
+      var s = document.getElementById("status");
+      s.className = "status err";
+      s.innerHTML = "OnTrace is taking a long time to load. Check your connection and refresh the page.";
+    }
+  }, 25000);
 </script>
 </body>
 </html>
