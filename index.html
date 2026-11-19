@@ -320,7 +320,10 @@
   .dempty .row{max-width:640px;width:100%}
   .dempty .row{flex-wrap:nowrap} .dempty .row input{flex:1 1 200px;width:auto;min-width:0}
   @media (max-width:560px){ .dempty .row{flex-wrap:wrap} .dempty .row > *{flex:1 1 100%} }
-  .main footer{border-top:1px solid #1c1c1c;margin-top:12px}
+  .main{display:flex;flex-direction:column;min-height:100vh}
+  .appfoot{margin-top:auto;padding:14px 0 4px;border-top:1px solid #1c1c1c;display:flex;justify-content:space-between;gap:6px 16px;flex-wrap:wrap;font-size:11px;line-height:1.5;color:#777}
+  .appfoot nav{display:flex;gap:4px 14px;flex-wrap:wrap}
+  .appfoot a{color:#8a8a8a;text-decoration:none}.appfoot a:hover{color:var(--accent)}
   @media (max-width:1100px){ .s3,.s4,.s5,.s7{grid-column:span 12} }
   @media (max-width:860px){
     .app{grid-template-columns:1fr}
@@ -820,20 +823,9 @@
   </section>
 
 
-  <footer>
-    <p class="copyright" style="margin:0 0 4px">Risk ratings are automated signals, not financial advice. <a href="terms.html">Terms</a></p>
-    <div class="contact">
-      <a href="https://x.com/0ntrace" target="_blank" rel="noopener" aria-label="OnTrace on X">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>@0ntrace</a>
-      <a href="mailto:team@ontrace.space" aria-label="Email OnTrace">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5h20v14H2V5zm2 2v.5l8 5 8-5V7H4zm16 2.85-8 5-8-5V17h16V9.85z"/></svg>team@ontrace.space</a>
-    </div>
-    <div class="footlinks">
-      <a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="security.html">Security</a><a href="terms.html">Terms &amp; Privacy</a>
-      <a href="https://github.com/davidbasil19/Ontrace" target="_blank" rel="noopener">GitHub</a>
-      <a href="#" data-home>Home</a>
-    </div>
-    <div class="copyright">© 2026 OnTrace · ontrace.space</div>
+  <footer class="appfoot">
+    <span>© 2026 OnTrace · Risk ratings are automated signals, not financial advice.</span>
+    <nav aria-label="Footer"><a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="security.html">Security</a><a href="terms.html">Terms</a><a href="https://github.com/davidbasil19/Ontrace" target="_blank" rel="noopener">GitHub</a><a href="https://x.com/0ntrace" target="_blank" rel="noopener">@0ntrace</a><a href="mailto:team@ontrace.space">team@ontrace.space</a></nav>
   </footer>
   </main>
 </div>
