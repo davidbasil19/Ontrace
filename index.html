@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OnTrace — the Solana toolbox</title>
+<meta name="description" content="Free Solana tools: wallet scan and cleanup, swap, multi-send, token creator, token checker, trending, watchlists, alerts, dev tracking, wallet graphs and transaction inspection.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="OnTrace — the Solana toolbox">
+<meta property="og:description" content="Scan, clean, swap, send, create and trace on Solana. Free and open source.">
+<meta property="og:image" content="https://ontrace.space/banner.jpg">
+<meta property="og:url" content="https://ontrace.space">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@0ntrace">
+<meta name="twitter:image" content="https://ontrace.space/banner.jpg">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000000; --panel:#0d0d0d; --panel2:#151515; --line:#262626;
+    --text:#f2f2f2; --muted:#9a9a9a; --accent:#b6ff3b; --accent2:#ff3bd4;
+    --ok:#22c55e; --warn:#f5b84b; --high:#f97316; --bad:#ef4444;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  a{color:var(--accent2)}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px}
+  header.hero{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:28px 26px;margin-bottom:18px;border:1px solid var(--line);border-radius:18px;background:#000}
+  .hero .deco{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .hero > *:not(.deco){position:relative}
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand img{width:66px;height:66px;filter:drop-shadow(0 0 10px rgba(182,255,59,.25))}
+  .wordmark{font-family:"Orbitron",system-ui,sans-serif;font-weight:800;font-size:34px;letter-spacing:4px;line-height:1;color:var(--text)}
+  .tag{color:var(--muted);font-size:13px;font-weight:500;margin-top:6px;letter-spacing:.3px}
+  .tag b{color:var(--accent);font-weight:600}
+  .panel h2, .tabs button{font-family:"Orbitron",system-ui,sans-serif;letter-spacing:.6px}
+  .panel h2{font-weight:600}
+  .tabs button{font-size:12px;font-weight:600}
+  @media (max-width:640px){ .wordmark{font-size:24px;letter-spacing:3px} .brand img{width:48px;height:48px} header.hero{padding:20px 16px} .hero .deco{opacity:.35} }
+  button{background:var(--accent);color:#000;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:14px}
+  button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--accent2)}
+  button.small{padding:5px 10px;font-size:12px;border-radius:8px}
+  button:not(.secondary):not(.danger):hover{box-shadow:0 0 16px rgba(182,255,59,.45)}
+  button.danger{background:var(--bad);color:#fff}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+  input,select,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px;width:100%;font-family:inherit}
+  textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;min-height:140px;resize:vertical}
+  label{display:block;color:var(--muted);font-size:12px;margin:0 0 5px;text-transform:uppercase;letter-spacing:.5px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row > *{flex:1 1 auto}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .panel h2{margin:0 0 4px;font-size:17px}
+  .panel .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;border-top:2px solid var(--accent2)}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+  .card .v{font-size:26px;font-weight:800;margin-top:4px}
+  .card .h{color:var(--muted);font-size:12px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  td.num,th.num{text-align:right;white-space:nowrap}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+  .b0{background:rgba(34,197,94,.15);color:var(--ok)}
+  .b1{background:rgba(245,184,75,.15);color:var(--warn)}
+  .b2{background:rgba(249,115,22,.16);color:var(--high)}
+  .b3{background:rgba(239,68,68,.16);color:var(--bad)}
+  .bp{background:rgba(255,59,212,.15);color:var(--accent2)}
+  .up{color:var(--ok)} .down{color:var(--bad)}
+  .reasons{color:var(--muted);font-size:12px;margin-top:3px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--muted);word-break:break-all}
+  .hidden{display:none !important}
+  .status{padding:10px 14px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);margin-bottom:16px;font-size:14px}
+  .status.err{border-color:var(--bad);color:#fecaca}
+  .status.ok{border-color:var(--ok)}
+  .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .tabs button{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+  .tabs button.active{color:#000;background:var(--accent);border-color:var(--accent);box-shadow:0 0 14px rgba(182,255,59,.35)}
+  .score{font-size:44px;font-weight:900}
+  .tokname{font-weight:700}
+  footer{color:var(--muted);font-size:12px;padding:20px 0 40px;line-height:1.7}
+  .contact{display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:center;padding:18px 0 6px;margin-top:6px;border-top:1px solid var(--line);font-size:14px}
+  .contact a{display:inline-flex;align-items:center;gap:8px;color:var(--text);text-decoration:none;padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+  .contact a:hover{border-color:var(--accent);box-shadow:0 0 12px rgba(182,255,59,.25)}
+  .contact svg{width:16px;height:16px;fill:currentColor}
+  .copyright{text-align:center;margin-top:10px}
+  .scroll{overflow-x:auto}
+  .check{width:auto;accent-color:var(--accent);margin-right:6px}
+  .checkline{display:flex;align-items:flex-start;gap:6px;color:var(--text);font-size:14px;margin:8px 0;text-transform:none;letter-spacing:0}
+  .report{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+  .report .card .v{font-size:18px}
+  .quote{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .quote .big{font-size:24px;font-weight:800}
+  .warnbox{border:1px solid var(--high);background:rgba(249,115,22,.08);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13px}
+  .note{color:var(--muted);font-size:12px;margin-top:8px}
+  @media (max-width:640px){ .hide-sm{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <svg class="deco" viewBox="0 0 1100 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <circle cx="-30" cy="-60" r="150" fill="none" stroke="#161616" stroke-width="46"/>
+      <circle cx="-10" cy="-40" r="175" fill="none" stroke="#b6ff3b" stroke-width="1.6" stroke-opacity=".75"/>
+      <circle cx="1150" cy="250" r="160" fill="none" stroke="#161616" stroke-width="46"/>
+      <circle cx="1130" cy="230" r="190" fill="none" stroke="#b6ff3b" stroke-width="1.6" stroke-opacity=".6"/>
+      <path d="M0 34 H250" stroke="#ff3bd4" stroke-width="2"/><circle cx="258" cy="34" r="7" fill="none" stroke="#ff3bd4" stroke-width="2.4"/>
+      <path d="M1100 118 H1040 L1012 146 H900" fill="none" stroke="#b6ff3b" stroke-width="2"/><circle cx="892" cy="146" r="7" fill="none" stroke="#b6ff3b" stroke-width="2.4"/>
+      <path d="M1100 136 H1060 L1036 160 H950" fill="none" stroke="#ff3bd4" stroke-width="2"/><circle cx="942" cy="160" r="6" fill="none" stroke="#ff3bd4" stroke-width="2.4"/>
+      <path d="M520 26 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3z" fill="#b6ff3b"/>
+      <path d="M760 128 l2.5 7 7 2.5 -7 2.5 -2.5 7 -2.5 -7 -7 -2.5 7 -2.5z" fill="#ff3bd4"/>
+      <path d="M140 132 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" fill="#b6ff3b"/>
+    </svg>
+    <div class="brand">
+      <img src="logo.png" alt="OnTrace logo" width="66" height="66">
+      <div>
+        <div class="wordmark">ONTRACE</div>
+        <div class="tag">The Solana toolbox — <b>scan</b>, clean, swap, send, create &amp; <b>trace</b>.</div>
+      </div>
+    </div>
+    <div class="row" style="flex:0 0 auto">
+      <select id="network" style="width:auto">
+        <option value="mainnet-beta">Mainnet</option>
+        <option value="devnet">Devnet (testing)</option>
+      </select>
+      <button id="connectBtn">Connect wallet</button>
+      <button id="disconnectBtn" class="secondary hidden">Disconnect</button>
+    </div>
+  </header>
+
+  <div id="status" class="status hidden"></div>
+
+  <div class="tabs">
+    <button data-tab="scan" class="active">Portfolio &amp; cleanup</button>
+    <button data-tab="swap">Swap</button>
+    <button data-tab="send">Multi-send</button>
+    <button data-tab="create">Create token</button>
+    <button data-tab="check">Token checker</button>
+    <button data-tab="trending">Trending</button>
+    <button data-tab="watch">Watchlist</button>
+    <button data-tab="dev">Dev tracker</button>
+    <button data-tab="graph">Wallet graph</button>
+    <button data-tab="inspect">Tx inspector</button>
+    <button data-tab="settings">Settings</button>
+  </div>
+
+  <!-- ================= PORTFOLIO ================= -->
+  <section id="tab-scan">
+    <div class="panel">
+      <h2>Scan a wallet</h2>
+      <p class="sub">Connect your wallet to scan and clean it, or paste any address for a read-only scan. Scanning never asks for a signature.</p>
+      <div class="row">
+        <input id="addrInput" placeholder="Wallet address (optional — leave empty to use connected wallet)">
+        <button id="scanBtn" style="flex:0 0 auto">Scan</button>
+      </div>
+    </div>
+
+    <div id="results" class="hidden">
+      <div class="cards">
+        <div class="card"><div class="k">Portfolio value</div><div class="v" id="totalV">–</div><div class="h" id="totalH"></div></div>
+        <div class="card"><div class="k">Wallet health</div><div class="score" id="scoreV">–</div><div class="h" id="scoreH"></div></div>
+        <div class="card"><div class="k">SOL to reclaim</div><div class="v" id="reclaimV">–</div><div class="h" id="reclaimH"></div></div>
+        <div class="card"><div class="k">Risky tokens</div><div class="v" id="riskV">–</div><div class="h">High risk or likely scam</div></div>
+        <div class="card"><div class="k">Active approvals</div><div class="v" id="delegV">–</div><div class="h">Apps allowed to move tokens</div></div>
+      </div>
+
+      <div class="panel">
+        <h2>Reclaim locked SOL</h2>
+        <p class="sub">Every empty token account holds a small SOL deposit. Closing it sends that SOL back to you. Nothing else is touched.</p>
+        <div class="row">
+          <div id="reclaimInfo" class="mono"></div>
+          <button id="reclaimBtn" style="flex:0 0 auto">Reclaim SOL</button>
+        </div>
+      </div>
+
+      <div class="panel" id="delegPanel">
+        <h2>Active approvals</h2>
+        <p class="sub">These token accounts have a delegate — someone you (or an app) approved to move your tokens. A <strong>personal wallet</strong> holding approval over your tokens is a red flag. Revoke anything you don't recognise.</p>
+        <div class="scroll"><table id="delegTable"></table></div>
+        <div class="row" style="margin-top:12px"><div></div><button id="revokeBtn" class="secondary" style="flex:0 0 auto">Revoke selected</button></div>
+      </div>
+
+      <div class="panel">
+        <h2>Your tokens</h2>
+        <p class="sub">Risk ratings come from live market data and on-chain token settings. Tick junk tokens to burn them and reclaim their SOL deposit.</p>
+        <div class="scroll"><table id="tokTable"></table></div>
+        <div class="row" style="margin-top:12px">
+          <div id="burnInfo" class="mono"></div>
+          <button id="burnBtn" class="danger" style="flex:0 0 auto">Burn selected &amp; reclaim</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SWAP ================= -->
+  <section id="tab-swap" class="hidden">
+    <div class="panel">
+      <h2>Swap</h2>
+      <p class="sub">Best-price routing across Solana DEXs, powered by Jupiter. OnTrace checks the token you're buying before you swap. Mainnet only.</p>
+      <div class="grid2">
+        <div><label>You pay</label><select id="swapFrom"></select></div>
+        <div><label>Amount</label><div class="row" style="flex-wrap:nowrap"><input id="swapAmt" placeholder="0.0" inputmode="decimal"><button id="swapMax" class="secondary small" style="flex:0 0 auto">Max</button></div></div>
+      </div>
+      <div class="grid2">
+        <div><label>You receive</label>
+          <select id="swapTo">
+            <option value="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v">USDC</option>
+            <option value="So11111111111111111111111111111111111111112">SOL</option>
+            <option value="Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB">USDT</option>
+            <option value="JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN">JUP</option>
+            <option value="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263">BONK</option>
+            <option value="custom">Other token (paste address)…</option>
+          </select>
+        </div>
+        <div><label>Slippage</label>
+          <select id="swapSlip">
+            <option value="50">0.5% (stable / large caps)</option>
+            <option value="100" selected>1%</option>
+            <option value="300">3%</option>
+            <option value="1000">10% (fast-moving memecoins)</option>
+          </select>
+        </div>
+      </div>
+      <input id="swapToCustom" class="hidden" placeholder="Token mint address to buy" style="margin-bottom:12px">
+      <button id="quoteBtn">Get quote</button>
+      <div id="swapQuote"></div>
+    </div>
+  </section>
+
+  <!-- ================= MULTI-SEND ================= -->
+  <section id="tab-send" class="hidden">
+    <div class="panel">
+      <h2>Multi-send</h2>
+      <p class="sub">Send SOL or any token to many wallets at once — airdrops, team payments, giveaways. Recipients without a token account get one created automatically (you pay the small deposit).</p>
+      <div class="grid2">
+        <div><label>Token to send</label><select id="sendToken"></select></div>
+        <div><label>Default amount (optional)</label><input id="sendDefault" placeholder="Used for lines with no amount" inputmode="decimal"></div>
+      </div>
+      <label>Recipients — one per line: address, amount</label>
+      <textarea id="sendList" placeholder="7xKX...abc, 100&#10;9fRk...xyz, 250&#10;H3pq...def"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button id="sendPreview" class="secondary" style="flex:0 0 auto">Check list</button>
+        <div></div>
+        <button id="sendBtn" style="flex:0 0 auto" disabled>Send</button>
+      </div>
+      <div id="sendOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= CREATE TOKEN ================= -->
+  <section id="tab-create" class="hidden">
+    <div class="panel">
+      <h2>Create a token</h2>
+      <p class="sub">Launch a Solana token (Token-2022 standard) with its name and symbol stored on-chain. Safe defaults: tokens can never be frozen, and the supply can be locked so no more can ever be minted.</p>
+      <div class="grid2">
+        <div><label>Name (max 32)</label><input id="ctName" maxlength="32" placeholder="OnTrace"></div>
+        <div><label>Symbol (max 10)</label><input id="ctSymbol" maxlength="10" placeholder="ONTRACE"></div>
+        <div><label>Total supply</label><input id="ctSupply" value="1000000000" inputmode="numeric"></div>
+        <div><label>Decimals</label><select id="ctDecimals"><option>6</option><option>9</option><option>0</option><option>2</option></select></div>
+      </div>
+      <label>Metadata link (optional)</label>
+      <input id="ctUri" maxlength="200" placeholder="https://ontrace.space/token.json — JSON with your logo and description">
+      <details style="margin:8px 0 4px"><summary class="note" style="cursor:pointer">What goes in the metadata link?</summary>
+        <p class="note">Host a small JSON file (for example on your own site) so wallets and explorers show your logo:</p>
+        <pre class="mono" style="background:var(--panel2);padding:10px;border-radius:8px;white-space:pre-wrap">{
+  "name": "OnTrace",
+  "symbol": "ONTRACE",
+  "description": "The Solana toolbox.",
+  "image": "https://ontrace.space/logo.png",
+  "external_url": "https://ontrace.space"
+}</pre>
+      </details>
+      <label class="checkline"><input type="checkbox" class="check" id="ctRevokeMint" checked> Lock supply (revoke mint authority) — recommended; buyers trust fixed supply</label>
+      <label class="checkline"><input type="checkbox" class="check" id="ctLockMeta"> Lock name &amp; logo forever (remove update authority)</label>
+      <p class="note">Freeze authority is never set, so nobody — including you — can freeze holders' tokens.</p>
+      <div class="row" style="margin-top:12px">
+        <div id="ctCost" class="mono"></div>
+        <button id="ctBtn" style="flex:0 0 auto">Create token</button>
+      </div>
+      <div id="ctOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= CHECKER ================= -->
+  <section id="tab-check" class="hidden">
+    <div class="panel">
+      <h2>Token checker</h2>
+      <p class="sub">Paste a token's mint address before you buy. OnTrace checks its market, liquidity and creator permissions.</p>
+      <div class="row">
+        <input id="mintInput" placeholder="Token mint address">
+        <button id="checkBtn" style="flex:0 0 auto">Check token</button>
+      </div>
+      <div id="checkOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= TRENDING ================= -->
+  <section id="tab-trending" class="hidden">
+    <div class="panel">
+      <h2>Trending on Solana</h2>
+      <p class="sub">Tokens getting attention on DexScreener right now. <span class="badge bp">Boosted</span> means the team paid for promotion — not the same as organic demand. Always check before buying.</p>
+      <div class="row"><select id="trendSort" style="width:auto;flex:0 0 auto">
+        <option value="vol">Sort: 24h volume</option><option value="chg">Sort: 24h change</option><option value="mcap">Sort: market cap</option><option value="age">Sort: newest</option>
+      </select><div></div><button id="trendBtn" style="flex:0 0 auto">Refresh</button></div>
+      <div class="scroll" style="margin-top:12px"><table id="trendTable"></table></div>
+    </div>
+  </section>
+
+
+  <!-- ================= WATCHLIST ================= -->
+  <section id="tab-watch" class="hidden">
+    <div class="panel">
+      <h2>Wallet watchlist</h2>
+      <p class="sub">Follow any wallet — whales, devs, smart traders, your own. Saved in this browser only.</p>
+      <div class="row">
+        <input id="watchAddr" placeholder="Wallet address">
+        <input id="watchLabel" placeholder="Label (e.g. Whale #1)" style="max-width:240px">
+        <button id="watchAdd" style="flex:0 0 auto">Add</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="row"><h2 style="flex:1 1 auto">Watched wallets</h2><button id="watchRefresh" class="secondary small" style="flex:0 0 auto">Refresh</button></div>
+      <div class="scroll" style="margin-top:10px"><table id="watchTable"></table></div>
+      <div id="watchDetail"></div>
+    </div>
+    <div class="panel">
+      <h2>Live alerts</h2>
+      <p class="sub">Get notified when a watched wallet makes a move. Alerts run while OnTrace is open in a browser tab (round-the-clock alerts via a Telegram bot are coming later).</p>
+      <div class="grid2">
+        <div><label>Alert me on</label><select id="alertRule">
+          <option value="all">All activity</option>
+          <option value="trades" selected>Buys, sells &amp; swaps only</option>
+          <option value="big">Only moves above the SOL threshold</option>
+        </select></div>
+        <div><label>SOL threshold</label><input id="alertMin" value="1" inputmode="decimal"></div>
+      </div>
+      <div class="row"><button id="alertToggle" style="flex:0 0 auto">Start alerts</button><div id="alertState" class="mono"></div></div>
+      <div id="alertFeed" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <!-- ================= DEV TRACKER ================= -->
+  <section id="tab-dev" class="hidden">
+    <div class="panel">
+      <h2>Developer wallet tracker</h2>
+      <p class="sub">Find who created a token, how much they still hold, whether they've been selling, and how concentrated the top holders are.</p>
+      <div class="row">
+        <input id="devMint" placeholder="Token mint address">
+        <input id="devManual" placeholder="Dev wallet (optional — if known)" style="max-width:300px">
+        <button id="devBtn" style="flex:0 0 auto">Trace dev</button>
+      </div>
+      <div id="devOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= GRAPH ================= -->
+  <section id="tab-graph" class="hidden">
+    <div class="panel">
+      <h2>Wallet relationship graph</h2>
+      <p class="sub">See who a wallet trades and transfers with most. Click a node to explore that wallet next. Off-curve addresses are programs or pools, not people.</p>
+      <div class="row">
+        <input id="graphAddr" placeholder="Wallet address">
+        <select id="graphN" style="width:auto;flex:0 0 auto"><option value="50">Last 50 txs</option><option value="100" selected>Last 100 txs</option><option value="200">Last 200 txs</option></select>
+        <button id="graphBtn" style="flex:0 0 auto">Map wallet</button>
+      </div>
+      <div id="graphOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= TX INSPECTOR ================= -->
+  <section id="tab-inspect" class="hidden">
+    <div class="panel">
+      <h2>Transaction inspector</h2>
+      <p class="sub">Paste a <strong>transaction signature</strong> to see what happened in plain English, or paste an <strong>unsigned transaction</strong> (base64) to simulate it and see exactly what would change before anyone signs. Flags drainer patterns like handing over token-account ownership.</p>
+      <textarea id="inspIn" placeholder="Signature (e.g. 5h3k…) or base64 transaction (AQAB…)" style="min-height:90px"></textarea>
+      <div class="row" style="margin-top:10px"><input id="inspFocus" placeholder="Wallet to focus on (optional — defaults to the fee payer)"><button id="inspBtn" style="flex:0 0 auto">Inspect</button></div>
+      <div id="inspOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= SETTINGS ================= -->
+  <section id="tab-settings" class="hidden">
+    <div class="panel">
+      <h2>RPC endpoint</h2>
+      <p class="sub">Solana's free public server blocks websites on mainnet. Paste a free RPC URL (e.g. from Helius) for reliable use. Saved only in this browser.</p>
+      <div class="row">
+        <input id="rpcInput" placeholder="https://mainnet.helius-rpc.com/?api-key=...">
+        <button id="rpcSave" class="secondary" style="flex:0 0 auto">Save</button>
+      </div>
+      <p class="mono" id="rpcNow" style="margin-top:10px"></p>
+    </div>
+    <div class="panel">
+      <h2>Priority fee</h2>
+      <p class="sub">Small tip to validators so transactions land faster when the network is busy.</p>
+      <select id="feeSel" style="width:auto">
+        <option value="0">None</option>
+        <option value="10000" selected>Low (recommended)</option>
+        <option value="100000">Medium</option>
+        <option value="1000000">High</option>
+      </select>
+    </div>
+  </section>
+
+  <footer>
+    <strong>Transparency.</strong> OnTrace runs entirely in your browser and never asks for your seed phrase. Every transaction is shown in your wallet before you approve it. Cleanup uses only standard Solana Token Program instructions (close, burn, revoke). Swaps are routed by Jupiter; market data comes from DexScreener. OnTrace charges no fees. Risk ratings are automated signals, not financial advice — always do your own research.
+    <div class="contact">
+      <a href="https://x.com/0ntrace" target="_blank" rel="noopener" aria-label="OnTrace on X">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>@0ntrace</a>
+      <a href="mailto:team@ontrace.space" aria-label="Email OnTrace">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 5h20v14H2V5zm2 2v.5l8 5 8-5V7H4zm16 2.85-8 5-8-5V17h16V9.85z"/></svg>team@ontrace.space</a>
+    </div>
+    <div class="copyright">© 2026 OnTrace · ontrace.space</div>
+  </footer>
+</div>
+
+<script type="module">
+import { Buffer } from "https://esm.sh/buffer@6.0.3";
+globalThis.Buffer = Buffer;
+const web3 = await import("https://esm.sh/@solana/web3.js@1.98.0");
+const spl  = await import("https://esm.sh/@solana/spl-token@0.4.9?deps=@solana/web3.js@1.98.0");
+const tmd  = await import("https://esm.sh/@solana/spl-token-metadata@0.1.6?deps=@solana/web3.js@1.98.0");
+const {
+  Connection, PublicKey, Keypair, Transaction, TransactionInstruction, VersionedTransaction,
+  SystemProgram, ComputeBudgetProgram, LAMPORTS_PER_SOL, clusterApiUrl
+} = web3;
+
+/* ---------- constants ---------- */
+/* Site owner: paste your RPC URL here before deploying (e.g. a free Helius key).
+   In the Helius dashboard, restrict the key to your domain so nobody else can use it. */
+const DEFAULT_RPC = { "mainnet-beta": "https://mainnet.helius-rpc.com/?api-key=328cd7ef-ac50-4a19-91d0-4ad3ec6532ce", "devnet": "" };
+const TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+const TOKEN_2022    = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+const WSOL = "So11111111111111111111111111111111111111112";
+const JUP = "https://lite-api.jup.ag/swap/v1";
+const TRUSTED = {
+  [WSOL]:"Wrapped SOL",
+  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v":"USDC",
+  "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB":"USDT",
+  "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo":"PYUSD",
+  "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN":"JUP",
+  "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263":"BONK",
+  "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So":"mSOL",
+  "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn":"JitoSOL",
+  "jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v":"JupSOL",
+  "bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1":"bSOL"
+};
+const LEVELS = ["Safe","Caution","High risk","Likely scam"];
+const BATCH = { close: 20, burn: 9, revoke: 20, sendSol: 18, sendToken: 5 };
+const SOL_RESERVE = 0.01; // SOL kept back for fees when using Max
+
+/* ---------- state ---------- */
+const state = { provider:null, wallet:null, owner:null, tokens:[], empties:[], delegs:[], holdings:null, solBal:0, solPrice:0, quote:null, sendPlan:null, trend:[] };
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch {} }
+};
+
+/* ---------- helpers ---------- */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const short = a => a ? a.slice(0,4) + "…" + a.slice(-4) : "";
+const usd = n => n == null ? "–" : n >= 1e9 ? "$"+(n/1e9).toFixed(2)+"B" : n >= 1e6 ? "$"+(n/1e6).toFixed(2)+"M" : n >= 1e3 ? "$"+(n/1e3).toFixed(1)+"K" : n >= 1 ? "$"+n.toFixed(2) : n > 0 ? "<$1" : "$0";
+const sol = l => (Number(l) / LAMPORTS_PER_SOL).toFixed(4);
+const pct = n => n == null ? "–" : `<span class="${n>=0?"up":"down"}">${n>=0?"+":""}${Number(n).toLocaleString(undefined,{maximumFractionDigits:1})}%</span>`;
+const ageStr = ms => { if (!ms) return "–"; const h=(Date.now()-ms)/3600000; return h<1?Math.max(1,Math.round(h*60))+"m":h<48?h.toFixed(0)+"h":(h/24).toFixed(0)+"d"; };
+const chunk = (arr, n) => { const out=[]; for (let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n)); return out; };
+function toBase(str, dec){
+  const s = String(str).trim().replace(/,/g,"");
+  if (!/^\d*\.?\d*$/.test(s) || s === "" || s === ".") throw new Error(`"${str}" is not a valid amount`);
+  const [i, f=""] = s.split(".");
+  if (f.length > dec) throw new Error(`Too many decimal places in "${str}" (max ${dec})`);
+  return BigInt(i||"0") * 10n**BigInt(dec) + BigInt((f + "0".repeat(dec)).slice(0,dec) || "0");
+}
+function fromBase(v, dec){
+  const b = BigInt(v); const d = 10n**BigInt(dec);
+  const i = b / d, f = (b % d).toString().padStart(dec,"0").replace(/0+$/,"");
+  return f ? `${i}.${f}` : `${i}`;
+}
+function status(msg, kind=""){ const el=$("status"); el.className="status "+kind; el.innerHTML=msg; el.classList.remove("hidden"); el.scrollIntoView({block:"nearest"}); }
+function clearStatus(){ $("status").classList.add("hidden"); }
+const net = () => $("network").value;
+const explorerTx = s => `https://solscan.io/tx/${s}${net()==="devnet"?"?cluster=devnet":""}`;
+const explorerAcct = a => `https://solscan.io/token/${a}${net()==="devnet"?"?cluster=devnet":""}`;
+
+function rpcUrl(){ return store.get("ontrace_rpc_"+net()) || DEFAULT_RPC[net()] || clusterApiUrl(net()); }
+function needsRpc(){ return net() === "mainnet-beta" && !store.get("ontrace_rpc_"+net()) && !DEFAULT_RPC[net()]; }
+function rpcNotice(){
+  if (needsRpc()) status('Mainnet needs an RPC endpoint — Solana\'s free public server blocks websites. Get a free key at <a href="https://www.helius.dev" target="_blank" rel="noopener">helius.dev</a> and paste it in <strong>Settings</strong>. (Devnet, Trending and Swap quotes work without one.)', "err");
+}
+function conn(){ return new Connection(rpcUrl(), "confirmed"); }
+function requireWallet(){ if (!state.owner){ status("Connect your wallet first.", "err"); return false; } if (needsRpc()){ rpcNotice(); return false; } return true; }
+
+/* ---------- wallets ---------- */
+function detectWallets(){
+  const list = [];
+  const ph = window.phantom?.solana;
+  if (ph?.isPhantom) list.push({ name:"Phantom", p:ph });
+  if (window.solflare?.isSolflare) list.push({ name:"Solflare", p:window.solflare });
+  const bp = window.backpack?.solana || (window.backpack?.isBackpack ? window.backpack : null);
+  if (bp) list.push({ name:"Backpack", p:bp });
+  if (!list.length && window.solana) list.push({ name:"Wallet", p:window.solana });
+  return list;
+}
+async function connect(){
+  const ws = detectWallets();
+  if (!ws.length){ status('No Solana wallet found. Install <a href="https://phantom.com" target="_blank" rel="noopener">Phantom</a>, Solflare or Backpack, then reload.', "err"); return; }
+  let w = ws[0];
+  if (ws.length > 1){
+    const pick = prompt("Choose wallet:\n" + ws.map((x,i)=>`${i+1}. ${x.name}`).join("\n"), "1");
+    const i = parseInt(pick,10)-1; if (ws[i]) w = ws[i];
+  }
+  try {
+    await w.p.connect();
+    const pk = w.p.publicKey; if (!pk) throw new Error("Wallet did not return an address");
+    state.provider = w.p; state.wallet = w.name; state.owner = new PublicKey(pk.toString()); state.holdings = null;
+    $("connectBtn").textContent = `${w.name}: ${short(state.owner.toBase58())}`;
+    $("disconnectBtn").classList.remove("hidden");
+    status(`Connected to ${esc(w.name)}.`, "ok");
+    refreshPickers();
+  } catch(e){ status("Connection cancelled or failed: " + esc(e.message||e), "err"); }
+}
+async function disconnect(){
+  try { await state.provider?.disconnect?.(); } catch {}
+  Object.assign(state,{provider:null,wallet:null,owner:null,holdings:null});
+  $("connectBtn").textContent = "Connect wallet";
+  $("disconnectBtn").classList.add("hidden");
+  fillTokenSelects();
+  status("Disconnected.");
+}
+
+/* ---------- data ---------- */
+async function fetchTokenAccounts(c, owner){
+  const res = await Promise.all([TOKEN_PROGRAM, TOKEN_2022].map(pid =>
+    c.getParsedTokenAccountsByOwner(owner, { programId: new PublicKey(pid) })));
+  return res.flatMap(r => r.value).map(({pubkey, account}) => {
+    const info = account.data.parsed.info;
+    return {
+      account: pubkey.toBase58(), programId: account.owner.toBase58(), lamports: account.lamports,
+      mint: info.mint, amount: BigInt(info.tokenAmount.amount), decimals: info.tokenAmount.decimals,
+      ui: Number(info.tokenAmount.uiAmountString ?? info.tokenAmount.uiAmount ?? 0),
+      state: info.state, delegate: info.delegate || null,
+      delegatedUi: info.delegatedAmount ? Number(info.delegatedAmount.uiAmountString ?? 0) : 0
+    };
+  });
+}
+async function fetchMarkets(mints){
+  const out = {};
+  for (const part of chunk([...new Set(mints)], 30)){
+    try {
+      const r = await fetch("https://api.dexscreener.com/tokens/v1/solana/" + part.join(","));
+      if (!r.ok) continue;
+      const pairs = await r.json();
+      for (const p of (Array.isArray(pairs) ? pairs : [])){
+        const m = p.baseToken?.address; if (!m || !part.includes(m)) continue;
+        const liq = p.liquidity?.usd ?? 0;
+        if (!out[m] || liq > out[m].liq){
+          const tx = p.txns?.h24 || {};
+          out[m] = {
+            name: p.baseToken.name, symbol: p.baseToken.symbol, price: Number(p.priceUsd || 0), liq,
+            mcap: p.marketCap ?? p.fdv ?? 0, txns24: (tx.buys||0) + (tx.sells||0), vol24: p.volume?.h24 ?? 0,
+            chg24: p.priceChange?.h24 ?? null, created: p.pairCreatedAt || null, url: p.url, icon: p.info?.imageUrl || null
+          };
+        }
+      }
+    } catch(e){ console.warn("dexscreener", e); }
+  }
+  return out;
+}
+async function fetchMintInfo(c, mints){
+  const out = {};
+  for (const part of chunk([...new Set(mints)], 100)){
+    const res = await c.getMultipleParsedAccounts(part.map(m => new PublicKey(m)));
+    res.value.forEach((acc, i) => {
+      const info = acc?.data?.parsed?.info; if (!info || acc.data.parsed.type !== "mint") return;
+      const exts = (info.extensions || []).map(e => e.extension);
+      out[part[i]] = {
+        decimals: info.decimals, programId: acc.owner.toBase58(),
+        mintAuthority: info.mintAuthority || null, freezeAuthority: info.freezeAuthority || null,
+        permanentDelegate: exts.includes("permanentDelegate"), transferHook: exts.includes("transferHook"),
+        transferFee: exts.includes("transferFeeConfig")
+      };
+    });
+  }
+  return out;
+}
+async function loadHoldings(force=false){
+  if (!state.owner) return null;
+  if (state.holdings && !force) return state.holdings;
+  const c = conn();
+  const [accts, lamports] = await Promise.all([fetchTokenAccounts(c, state.owner), c.getBalance(state.owner)]);
+  const held = accts.filter(a => a.amount > 0n);
+  const markets = await fetchMarkets([...held.map(a=>a.mint), WSOL]);
+  state.solBal = lamports; state.solPrice = markets[WSOL]?.price || 0;
+  state.holdings = held.map(a => ({ ...a, symbol: markets[a.mint]?.symbol || TRUSTED[a.mint] || short(a.mint), market: markets[a.mint] || null }));
+  return state.holdings;
+}
+
+/* ---------- risk engine ---------- */
+function assess(mint, market, mintInfo){
+  if (TRUSTED[mint]) return { level:0, reasons:["Well-known, established token"] };
+  let level = 0; const reasons = [];
+  const bump = (l, r) => { level = Math.max(level, l); reasons.push(r); };
+  if (!market){
+    bump(2, "No trading market found — often a spam airdrop or a dead token");
+  } else {
+    if (market.liq < 1000) bump(2, `Liquidity only ${usd(market.liq)} — you may not be able to sell`);
+    if (market.mcap > 100000 && market.liq > 0 && market.mcap / market.liq > 100 && market.txns24 < 50)
+      bump(3, "Market cap looks fake: huge valuation with almost no trading");
+    if (market.txns24 < 10) bump(1, "Almost no trading in the last 24h");
+    if (market.created && Date.now() - market.created < 86400000) bump(1, "Trading pair is less than 24 hours old");
+  }
+  if (mintInfo){
+    if (mintInfo.permanentDelegate) bump(3, "A permanent delegate can move tokens out of your wallet");
+    if (mintInfo.freezeAuthority) bump(2, "Creator can freeze your tokens so you can't sell");
+    if (mintInfo.mintAuthority) bump(1, "Creator can still mint more supply");
+    if (mintInfo.transferHook) bump(1, "Custom transfer hook — transfers run creator code");
+    if (mintInfo.transferFee) bump(1, "Charges a fee on every transfer");
+  }
+  if (!reasons.length) reasons.push("No red flags found");
+  return { level, reasons };
+}
+function healthScore(tokens, empties, delegs){
+  let s = 100;
+  s -= Math.min(20, empties.length * 2);
+  s -= Math.min(40, tokens.filter(t=>t.risk.level===3).length * 8);
+  s -= Math.min(20, tokens.filter(t=>t.risk.level===2).length * 4);
+  s -= Math.min(15, delegs.length * 5);
+  s -= Math.min(10, tokens.filter(t=>t.isDust).length);
+  return Math.max(0, s);
+}
+const badge = r => `<span class="badge b${r.level}">${LEVELS[r.level]}</span>`;
+
+/* ---------- transactions ---------- */
+function feeIx(){ const f = parseInt($("feeSel").value,10); return f > 0 ? [ComputeBudgetProgram.setComputeUnitPrice({ microLamports: f })] : []; }
+async function sendTx(ixs, extraSigners=[]){
+  const c = conn(), p = state.provider;
+  const tx = new Transaction().add(...feeIx(), ...ixs);
+  tx.feePayer = state.owner;
+  const { blockhash, lastValidBlockHeight } = await c.getLatestBlockhash("confirmed");
+  tx.recentBlockhash = blockhash;
+  if (extraSigners.length) tx.partialSign(...extraSigners);
+  let signature;
+  if (!extraSigners.length && p.signAndSendTransaction){
+    const r = await p.signAndSendTransaction(tx); signature = r.signature || r;
+  } else {
+    const signed = await p.signTransaction(tx);
+    signature = await c.sendRawTransaction(signed.serialize());
+  }
+  await c.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed");
+  return signature;
+}
+async function sendGroups(groups, label){
+  const sigs = [];
+  for (let i=0;i<groups.length;i++){
+    status(`${label}: transaction ${i+1} of ${groups.length} — approve it in your wallet…`);
+    sigs.push(await sendTx(groups[i]));
+  }
+  return sigs;
+}
+const txLinks = sigs => sigs.map((s,i)=>`<a href="${explorerTx(s)}" target="_blank" rel="noopener">tx ${i+1}</a>`).join(" · ");
+
+function closeIx(account, owner, programId){
+  return new TransactionInstruction({ programId:new PublicKey(programId), data:Buffer.from([9]), keys:[
+    { pubkey:new PublicKey(account), isSigner:false, isWritable:true },
+    { pubkey:owner, isSigner:false, isWritable:true },
+    { pubkey:owner, isSigner:true, isWritable:false } ]});
+}
+function burnIx(account, mint, owner, programId, amount){
+  const data = Buffer.alloc(9); data[0] = 8; data.writeBigUInt64LE(amount, 1);
+  return new TransactionInstruction({ programId:new PublicKey(programId), data, keys:[
+    { pubkey:new PublicKey(account), isSigner:false, isWritable:true },
+    { pubkey:new PublicKey(mint), isSigner:false, isWritable:true },
+    { pubkey:owner, isSigner:true, isWritable:false } ]});
+}
+function revokeIx(account, owner, programId){
+  return new TransactionInstruction({ programId:new PublicKey(programId), data:Buffer.from([5]), keys:[
+    { pubkey:new PublicKey(account), isSigner:false, isWritable:true },
+    { pubkey:owner, isSigner:true, isWritable:false } ]});
+}
+
+/* =============== PORTFOLIO & CLEANUP =============== */
+async function scan(){
+  const typed = $("addrInput").value.trim();
+  let owner;
+  try { owner = typed ? new PublicKey(typed) : state.owner; } catch { status("That doesn't look like a valid Solana address.", "err"); return; }
+  if (!owner){ status("Connect a wallet or paste an address to scan.", "err"); return; }
+  if (needsRpc()){ rpcNotice(); return; }
+  $("scanBtn").disabled = true;
+  status("Scanning token accounts…");
+  try {
+    const c = conn();
+    const [accts, lamports] = await Promise.all([fetchTokenAccounts(c, owner), c.getBalance(owner)]);
+    const empties = accts.filter(a => a.amount === 0n && a.state !== "frozen");
+    const held = accts.filter(a => a.amount > 0n);
+    const mints = [...new Set(held.map(a => a.mint))];
+    status(`Found ${accts.length} token accounts. Checking ${mints.length} tokens…`);
+    const [markets, mintInfos] = await Promise.all([fetchMarkets([...mints, WSOL]), fetchMintInfo(c, mints)]);
+    const solPrice = markets[WSOL]?.price || 0;
+    const tokens = held.map(a => {
+      const m = markets[a.mint] || null;
+      const risk = assess(a.mint, m, mintInfos[a.mint]);
+      const value = m ? a.ui * m.price : 0;
+      const isDust = !TRUSTED[a.mint] && value < 0.5 && risk.level < 2;
+      return { ...a, market:m, risk, value, isDust, name: m?.name || TRUSTED[a.mint] || "Unknown token", symbol: m?.symbol || "" };
+    }).sort((x,y) => y.risk.level - x.risk.level || y.value - x.value);
+    const delegs = accts.filter(a => a.delegate);
+    Object.assign(state, { tokens, empties, delegs });
+    if (state.owner && owner.equals(state.owner)){
+      state.solBal = lamports; state.solPrice = solPrice;
+      state.holdings = held.map(a => ({ ...a, symbol: markets[a.mint]?.symbol || TRUSTED[a.mint] || short(a.mint), market: markets[a.mint] || null }));
+      fillTokenSelects();
+    }
+    clearStatus();
+    render(owner, lamports, solPrice);
+  } catch(e){
+    console.error(e);
+    const hint = /403|429|fetch|Failed/i.test(String(e.message)) ? " The RPC may be blocking or rate-limiting you — add a free RPC URL in Settings." : "";
+    status("Scan failed: " + esc(e.message || e) + hint, "err");
+  } finally { $("scanBtn").disabled = false; }
+}
+
+function render(owner, lamports, solPrice){
+  const { tokens, empties, delegs } = state;
+  const canAct = state.owner && owner.equals(state.owner);
+  $("results").classList.remove("hidden");
+  const solUi = lamports / LAMPORTS_PER_SOL;
+  const total = solUi * solPrice + tokens.reduce((s,t)=>s+(t.risk.level>=3?0:t.value),0);
+  $("totalV").textContent = solPrice ? usd(total) : "–";
+  $("totalH").textContent = `${solUi.toFixed(4)} SOL + ${tokens.length} tokens`;
+  const score = healthScore(tokens, empties, delegs);
+  $("scoreV").textContent = score;
+  $("scoreV").style.color = score >= 80 ? "var(--ok)" : score >= 50 ? "var(--warn)" : "var(--bad)";
+  $("scoreH").textContent = `${empties.length} empty accounts`;
+  const reclaimLamports = empties.reduce((s,a)=>s+a.lamports,0);
+  $("reclaimV").textContent = sol(reclaimLamports);
+  $("reclaimH").textContent = `${empties.length} empty accounts`;
+  $("riskV").textContent = tokens.filter(t=>t.risk.level>=2).length;
+  $("delegV").textContent = delegs.length;
+
+  $("reclaimInfo").textContent = empties.length
+    ? `${empties.length} empty accounts · ${sol(reclaimLamports)} SOL back to you · ${Math.ceil(empties.length/BATCH.close)} transaction(s)`
+    : "No empty accounts — nothing to reclaim.";
+  $("reclaimBtn").disabled = !empties.length || !canAct;
+
+  $("delegPanel").classList.toggle("hidden", !delegs.length);
+  $("delegTable").innerHTML = `<tr><th><input type="checkbox" class="check" id="delegAll" checked title="Select all"></th><th>Token</th><th>Approved to</th><th>Type</th><th class="num">Amount allowed</th></tr>` +
+    delegs.map((d,i)=>{
+      const t = tokens.find(x=>x.account===d.account);
+      return `<tr><td><input type="checkbox" class="check" data-deleg="${i}" checked></td>
+        <td><span class="tokname">${esc(t?.symbol || t?.name || short(d.mint))}</span><div class="mono">${esc(short(d.mint))}</div></td>
+        <td class="mono">${esc(d.delegate)}</td><td>${isPda(d.delegate)?`<span class="badge b1">App / program</span>`:`<span class="badge b2">Personal wallet</span>`}</td><td class="num">${d.delegatedUi.toLocaleString()}</td></tr>`;
+    }).join("");
+  $("revokeBtn").disabled = !canAct;
+
+  $("tokTable").innerHTML = `<tr><th></th><th>Token</th><th>Risk</th><th class="num">Balance</th><th class="num">Value</th><th class="num hide-sm">Liquidity</th><th></th></tr>` +
+    tokens.map((t,i)=>{
+      const pre = !TRUSTED[t.mint] && t.risk.level >= 2 && t.value < 1;
+      const actions = [];
+      if (t.market) actions.push(`<a href="${esc(t.market.url)}" target="_blank" rel="noopener">Chart</a>`);
+      actions.push(`<a href="#" data-swapmint="${esc(t.mint)}">Swap</a>`);
+      if (t.mint === WSOL && canAct) actions.push(`<a href="#" data-unwrap="${i}">Unwrap</a>`);
+      return `<tr>
+        <td>${TRUSTED[t.mint] ? "" : `<input type="checkbox" class="check" data-burn="${i}" ${pre?"checked":""}>`}</td>
+        <td><span class="tokname">${esc(t.symbol || t.name)}</span> <span class="mono">${esc(t.symbol ? t.name : "")}</span><div class="mono">${esc(short(t.mint))}</div></td>
+        <td>${badge(t.risk)}<div class="reasons">${t.risk.reasons.map(esc).join("<br>")}</div></td>
+        <td class="num">${t.ui.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
+        <td class="num">${usd(t.value)}</td>
+        <td class="num hide-sm">${t.market ? usd(t.market.liq) : "–"}</td>
+        <td>${actions.join(" · ")}</td>
+      </tr>`;
+    }).join("");
+  updateBurnInfo();
+  $("burnBtn").disabled = !canAct;
+  if (!canAct) status("Read-only scan. Connect this wallet to clean it up.", "");
+}
+function selectedBurns(){ return [...document.querySelectorAll("[data-burn]:checked")].map(el => state.tokens[+el.dataset.burn]); }
+function selectedDelegs(){ return [...document.querySelectorAll("[data-deleg]:checked")].map(el => state.delegs[+el.dataset.deleg]); }
+function updateBurnInfo(){
+  const s = selectedBurns();
+  const lam = s.reduce((a,t)=>a+t.lamports,0), val = s.reduce((a,t)=>a+t.value,0);
+  $("burnInfo").textContent = s.length ? `${s.length} selected · ${sol(lam)} SOL back · burns tokens worth ${usd(val)}` : "Nothing selected.";
+}
+async function runAction(btn, label, build){
+  if (!requireWallet()) return;
+  btn.disabled = true;
+  try {
+    const groups = build(); if (!groups.length) return;
+    const sigs = await sendGroups(groups, label);
+    status(`${label} complete. ${txLinks(sigs)}. Rescanning…`, "ok");
+    await scan();
+    status(`${label} complete. ${txLinks(sigs)}`, "ok");
+  } catch(e){ console.error(e); status(`${label} stopped: ${esc(e.message || e)}`, "err"); }
+  finally { btn.disabled = false; }
+}
+$("reclaimBtn").onclick = () => runAction($("reclaimBtn"), "Reclaim", () =>
+  chunk(state.empties, BATCH.close).map(g => g.map(a => closeIx(a.account, state.owner, a.programId))));
+$("burnBtn").onclick = () => {
+  const s = selectedBurns();
+  if (!s.length){ status("Tick the tokens you want to burn first.", "err"); return; }
+  const val = s.reduce((a,t)=>a+t.value,0);
+  const names = s.slice(0,8).map(t=>t.symbol||t.name||short(t.mint)).join(", ") + (s.length>8?"…":"");
+  if (!confirm(`Burn ${s.length} token(s) permanently?\n\n${names}\n\nEstimated value destroyed: ${usd(val)}\nThis cannot be undone.`)) return;
+  runAction($("burnBtn"), "Burn & reclaim", () =>
+    chunk(s, BATCH.burn).map(g => g.flatMap(t => [ burnIx(t.account, t.mint, state.owner, t.programId, t.amount), closeIx(t.account, state.owner, t.programId) ])));
+};
+$("revokeBtn").onclick = () => {
+  const s = selectedDelegs();
+  if (!s.length){ status("Tick the approvals you want to revoke first.", "err"); return; }
+  runAction($("revokeBtn"), "Revoke", () => chunk(s, BATCH.revoke).map(g => g.map(d => revokeIx(d.account, state.owner, d.programId))));
+};
+document.addEventListener("change", e => {
+  if (e.target.matches("[data-burn]")) updateBurnInfo();
+  if (e.target.id === "delegAll") document.querySelectorAll("[data-deleg]").forEach(cb => cb.checked = e.target.checked);
+});
+document.addEventListener("click", e => {
+  const sw = e.target.closest("[data-swapmint]");
+  if (sw){ e.preventDefault(); openSwapTo(sw.dataset.swapmint); return; }
+  const uw = e.target.closest("[data-unwrap]");
+  if (uw){ e.preventDefault(); const t = state.tokens[+uw.dataset.unwrap];
+    runAction($("reclaimBtn"), "Unwrap SOL", () => [[closeIx(t.account, state.owner, t.programId)]]); return; }
+  const ck = e.target.closest("[data-checkmint]");
+  if (ck){ e.preventDefault(); $("mintInput").value = ck.dataset.checkmint; showTab("check"); $("checkBtn").click(); }
+});
+
+/* =============== TOKEN PICKERS (swap / send) =============== */
+function fillTokenSelects(){
+  const h = state.holdings || [];
+  const solOpt = `<option value="${WSOL}">SOL — ${state.owner ? (state.solBal/LAMPORTS_PER_SOL).toFixed(4) : "connect wallet"}</option>`;
+  const opts = h.filter(t=>t.mint!==WSOL).map(t => `<option value="${esc(t.account)}">${esc(t.symbol)} — ${t.ui.toLocaleString(undefined,{maximumFractionDigits:4})}</option>`).join("");
+  const keepFrom = $("swapFrom").value, keepSend = $("sendToken").value;
+  $("swapFrom").innerHTML = solOpt + opts; $("sendToken").innerHTML = solOpt + opts;
+  if ([...$("swapFrom").options].some(o=>o.value===keepFrom)) $("swapFrom").value = keepFrom;
+  if ([...$("sendToken").options].some(o=>o.value===keepSend)) $("sendToken").value = keepSend;
+}
+async function refreshPickers(){
+  if (!state.owner || needsRpc()) { fillTokenSelects(); return; }
+  try { await loadHoldings(true); } catch(e){ console.warn(e); }
+  fillTokenSelects();
+}
+function pickedToken(selectId){
+  const v = $(selectId).value;
+  if (v === WSOL || !v) return { isSol:true, mint:WSOL, decimals:9, symbol:"SOL", balanceBase: BigInt(state.solBal||0) };
+  const t = (state.holdings||[]).find(x => x.account === v);
+  return t ? { isSol:false, mint:t.mint, decimals:t.decimals, symbol:t.symbol, account:t.account, programId:t.programId, balanceBase:t.amount } : null;
+}
+
+/* =============== SWAP =============== */
+function openSwapTo(mint){
+  const known = [...$("swapTo").options].find(o => o.value === mint);
+  if (known) { $("swapTo").value = mint; $("swapToCustom").classList.add("hidden"); }
+  else { $("swapTo").value = "custom"; $("swapToCustom").classList.remove("hidden"); $("swapToCustom").value = mint; }
+  $("swapQuote").innerHTML = ""; showTab("swap");
+}
+$("swapTo").onchange = () => { $("swapToCustom").classList.toggle("hidden", $("swapTo").value !== "custom"); $("swapQuote").innerHTML = ""; };
+$("swapMax").onclick = () => {
+  const t = pickedToken("swapFrom"); if (!t || !state.owner) return;
+  let b = t.balanceBase; if (t.isSol) b = b > BigInt(Math.round(SOL_RESERVE*LAMPORTS_PER_SOL)) ? b - BigInt(Math.round(SOL_RESERVE*LAMPORTS_PER_SOL)) : 0n;
+  $("swapAmt").value = fromBase(b, t.decimals);
+};
+$("quoteBtn").onclick = async () => {
+  if (net() !== "mainnet-beta"){ status("Swaps work on Mainnet only. Switch the network at the top.", "err"); return; }
+  const from = pickedToken("swapFrom");
+  const toMint = $("swapTo").value === "custom" ? $("swapToCustom").value.trim() : $("swapTo").value;
+  try { new PublicKey(toMint); } catch { status("Paste a valid token address to buy.", "err"); return; }
+  if (!from){ status("Pick a token to pay with.", "err"); return; }
+  if (from.mint === toMint){ status("Pick two different tokens.", "err"); return; }
+  let amount; try { amount = toBase($("swapAmt").value, from.decimals); } catch(e){ status(esc(e.message), "err"); return; }
+  if (amount <= 0n){ status("Enter an amount.", "err"); return; }
+  if (state.owner && amount > from.balanceBase){ status(`You only have ${fromBase(from.balanceBase, from.decimals)} ${esc(from.symbol)}.`, "err"); return; }
+  $("quoteBtn").disabled = true; $("swapQuote").innerHTML = `<p class="mono">Finding best route…</p>`; clearStatus();
+  try {
+    const slip = $("swapSlip").value;
+    const [q, markets] = await Promise.all([
+      fetch(`${JUP}/quote?inputMint=${from.mint}&outputMint=${toMint}&amount=${amount}&slippageBps=${slip}`).then(r=>r.json()),
+      fetchMarkets([toMint])
+    ]);
+    if (!q.outAmount) throw new Error(q.error || "No route found for this pair");
+    let mintInfo = null, outDec = null;
+    if (!needsRpc()){ try { mintInfo = (await fetchMintInfo(conn(), [toMint]))[toMint]; outDec = mintInfo?.decimals ?? null; } catch {} }
+    const mk = markets[toMint];
+    if (outDec == null) outDec = toMint === WSOL ? 9 : (TRUSTED[toMint] && /USD/.test(TRUSTED[toMint]) ? 6 : null);
+    const risk = assess(toMint, mk, mintInfo);
+    const outSym = mk?.symbol || TRUSTED[toMint] || short(toMint);
+    const fmt = v => outDec == null ? `${v} (base units)` : Number(fromBase(v, outDec)).toLocaleString(undefined,{maximumFractionDigits:6});
+    const route = (q.routePlan||[]).map(r => r.swapInfo?.label).filter(Boolean).join(" → ");
+    const impact = Number(q.priceImpactPct||0)*100;
+    state.quote = { q, toMint, risk };
+    $("swapQuote").innerHTML = `<div class="quote">
+      <div class="note">You receive (estimated)</div>
+      <div class="big">${fmt(q.outAmount)} ${esc(outSym)}</div>
+      <div class="mono">Minimum after slippage: ${fmt(q.otherAmountThreshold)} · Price impact: ${impact.toFixed(2)}% · Route: ${esc(route||"–")}</div>
+      <div style="margin-top:10px">Token check: ${badge(risk)} <span class="reasons">${risk.reasons.map(esc).join(" · ")}</span></div>
+      ${impact > 3 ? `<div class="warnbox">High price impact (${impact.toFixed(1)}%). The pool is thin for this size — consider a smaller amount.</div>` : ""}
+      ${risk.level >= 2 ? `<div class="warnbox"><label class="checkline"><input type="checkbox" class="check" id="riskAck"> I understand this token is flagged ${LEVELS[risk.level].toLowerCase()} and I may lose this money.</label></div>` : ""}
+      <div class="row" style="margin-top:12px"><div class="note">Quotes expire quickly — swap within ~30 seconds or refresh.</div><button id="swapBtn" style="flex:0 0 auto">Swap</button></div>
+    </div>`;
+    $("swapBtn").onclick = doSwap;
+  } catch(e){ $("swapQuote").innerHTML = `<p class="status err">Quote failed: ${esc(e.message||e)}</p>`; }
+  finally { $("quoteBtn").disabled = false; }
+};
+async function doSwap(){
+  if (!requireWallet()) return;
+  const { q, risk } = state.quote || {};
+  if (!q) return;
+  if (risk.level >= 2 && !$("riskAck")?.checked){ status("Tick the risk box to confirm you understand.", "err"); return; }
+  const btn = $("swapBtn"); btn.disabled = true;
+  try {
+    status("Building swap transaction…");
+    const r = await fetch(`${JUP}/swap`, { method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ quoteResponse:q, userPublicKey: state.owner.toBase58(), dynamicComputeUnitLimit:true, prioritizationFeeLamports:"auto" }) });
+    const j = await r.json();
+    if (!j.swapTransaction) throw new Error(j.error || "Jupiter could not build the swap");
+    const vtx = VersionedTransaction.deserialize(Buffer.from(j.swapTransaction, "base64"));
+    status("Approve the swap in your wallet…");
+    const c = conn(), p = state.provider;
+    let signature;
+    if (p.signAndSendTransaction){ const res = await p.signAndSendTransaction(vtx); signature = res.signature || res; }
+    else { const signed = await p.signTransaction(vtx); signature = await c.sendRawTransaction(signed.serialize()); }
+    status("Confirming swap…");
+    const bh = await c.getLatestBlockhash("confirmed");
+    await c.confirmTransaction({ signature, blockhash: vtx.message.recentBlockhash, lastValidBlockHeight: j.lastValidBlockHeight || bh.lastValidBlockHeight }, "confirmed");
+    status(`Swap complete. <a href="${explorerTx(signature)}" target="_blank" rel="noopener">View transaction</a>`, "ok");
+    $("swapQuote").innerHTML = ""; state.quote = null;
+    refreshPickers();
+  } catch(e){ console.error(e); status("Swap stopped: " + esc(e.message||e), "err"); }
+  finally { btn.disabled = false; }
+}
+
+/* =============== MULTI-SEND =============== */
+function parseRecipients(){
+  const tok = pickedToken("sendToken"); if (!tok) throw new Error("Pick a token to send.");
+  const def = $("sendDefault").value.trim();
+  const rows = [], errors = [];
+  $("sendList").value.split(/\r?\n/).forEach((line, idx) => {
+    const l = line.trim(); if (!l) return;
+    const [addr, amt] = l.split(/[\s,;]+/);
+    try {
+      const pk = new PublicKey(addr);
+      const a = amt || def; if (!a) throw new Error("no amount (set a default amount)");
+      const base = toBase(a, tok.decimals); if (base <= 0n) throw new Error("amount must be above 0");
+      rows.push({ to: pk, amount: base, ui: a });
+    } catch(e){ errors.push(`Line ${idx+1}: ${e.message.includes("Invalid public key") || e.message.includes("Non-base58") ? "invalid address" : e.message}`); }
+  });
+  return { tok, rows, errors };
+}
+$("sendPreview").onclick = async () => {
+  $("sendBtn").disabled = true; state.sendPlan = null;
+  try {
+    if (state.owner && !needsRpc()) await loadHoldings();
+    const { tok, rows, errors } = parseRecipients();
+    const total = rows.reduce((s,r)=>s+r.amount, 0n);
+    const dupes = rows.length - new Set(rows.map(r=>r.to.toBase58())).size;
+    const per = tok.isSol ? BATCH.sendSol : BATCH.sendToken;
+    const over = state.owner && total > tok.balanceBase;
+    $("sendOut").innerHTML = `<div class="quote">
+      <div class="big">${rows.length} recipients · ${fromBase(total, tok.decimals)} ${esc(tok.symbol)}</div>
+      <div class="mono">${Math.ceil(rows.length/per)} transaction(s)${tok.isSol ? "" : " · new recipients get a token account (~0.002 SOL each, paid by you)"}</div>
+      ${dupes ? `<div class="warnbox">${dupes} duplicate address(es) — they'll be paid more than once.</div>` : ""}
+      ${over ? `<div class="warnbox">You don't have enough ${esc(tok.symbol)} (balance ${fromBase(tok.balanceBase, tok.decimals)}).</div>` : ""}
+      ${errors.length ? `<div class="warnbox">${errors.slice(0,10).map(esc).join("<br>")}${errors.length>10?"<br>…":""}</div>` : ""}
+    </div>`;
+    if (rows.length && !errors.length && !over){ state.sendPlan = { tok, rows }; $("sendBtn").disabled = !state.owner; }
+  } catch(e){ $("sendOut").innerHTML = `<p class="status err">${esc(e.message||e)}</p>`; }
+};
+["sendList","sendDefault","sendToken"].forEach(id => $(id).addEventListener("input", () => { $("sendBtn").disabled = true; state.sendPlan = null; }));
+$("sendToken").addEventListener("change", () => { $("sendBtn").disabled = true; state.sendPlan = null; });
+$("sendBtn").onclick = async () => {
+  if (!requireWallet() || !state.sendPlan) return;
+  const { tok, rows } = state.sendPlan;
+  const total = rows.reduce((s,r)=>s+r.amount, 0n);
+  if (!confirm(`Send ${fromBase(total, tok.decimals)} ${tok.symbol} to ${rows.length} wallets?\n\nTransfers cannot be reversed.`)) return;
+  const btn = $("sendBtn"); btn.disabled = true;
+  try {
+    let groups;
+    if (tok.isSol){
+      groups = chunk(rows, BATCH.sendSol).map(g => g.map(r => SystemProgram.transfer({ fromPubkey: state.owner, toPubkey: r.to, lamports: r.amount })));
+    } else {
+      const pid = new PublicKey(tok.programId), mint = new PublicKey(tok.mint), src = new PublicKey(tok.account);
+      groups = chunk(rows, BATCH.sendToken).map(g => g.flatMap(r => {
+        const ata = spl.getAssociatedTokenAddressSync(mint, r.to, true, pid);
+        return [
+          spl.createAssociatedTokenAccountIdempotentInstruction(state.owner, ata, r.to, mint, pid),
+          spl.createTransferCheckedInstruction(src, mint, ata, state.owner, r.amount, tok.decimals, [], pid)
+        ];
+      }));
+    }
+    const sigs = await sendGroups(groups, "Multi-send");
+    status(`Sent to ${rows.length} wallets. ${txLinks(sigs)}`, "ok");
+    state.sendPlan = null; refreshPickers();
+  } catch(e){ console.error(e); status("Multi-send stopped: " + esc(e.message||e) + " — earlier transactions in the batch may already have gone through; check your wallet history before retrying.", "err"); }
+};
+
+/* =============== CREATE TOKEN =============== */
+async function estimateCreate(){
+  if (needsRpc()) { $("ctCost").textContent = ""; return null; }
+  try {
+    const c = conn();
+    const meta = { mint: PublicKey.default, name: $("ctName").value || "Token", symbol: $("ctSymbol").value || "TKN", uri: $("ctUri").value || "", additionalMetadata: [] };
+    const mintLen = spl.getMintLen([spl.ExtensionType.MetadataPointer]);
+    const metaLen = spl.TYPE_SIZE + spl.LENGTH_SIZE + tmd.pack(meta).length;
+    const [mintRent, ataRent] = await Promise.all([
+      c.getMinimumBalanceForRentExemption(mintLen + metaLen),
+      c.getMinimumBalanceForRentExemption(spl.getAccountLen([spl.ExtensionType.ImmutableOwner]))
+    ]);
+    const totalL = mintRent + ataRent + 10000;
+    $("ctCost").textContent = `Estimated cost: ~${sol(totalL)} SOL (account deposits + network fee)`;
+    return { mintLen, mintRent };
+  } catch(e){ $("ctCost").textContent = ""; return null; }
+}
+["ctName","ctSymbol","ctUri"].forEach(id => $(id).addEventListener("change", estimateCreate));
+$("ctBtn").onclick = async () => {
+  if (!requireWallet()) return;
+  const name = $("ctName").value.trim(), symbol = $("ctSymbol").value.trim().toUpperCase(), uri = $("ctUri").value.trim();
+  const decimals = parseInt($("ctDecimals").value, 10);
+  if (!name || !symbol){ status("Enter a name and a symbol.", "err"); return; }
+  if (uri && !/^https?:\/\//.test(uri)){ status("Metadata link must start with https://", "err"); return; }
+  let supply; try { supply = toBase($("ctSupply").value, decimals); } catch(e){ status(esc(e.message), "err"); return; }
+  if (supply <= 0n || supply > 18446744073709551615n){ status("Supply is out of range for this many decimals.", "err"); return; }
+  const lockSupply = $("ctRevokeMint").checked, lockMeta = $("ctLockMeta").checked;
+  if (!confirm(`Create ${name} ($${symbol})?\n\nSupply: ${$("ctSupply").value} (all sent to your wallet)\nDecimals: ${decimals}\nSupply locked: ${lockSupply?"YES":"no"}\nName/logo locked: ${lockMeta?"YES":"no"}\nFreeze authority: none\n\n${$("ctCost").textContent}`)) return;
+  const btn = $("ctBtn"); btn.disabled = true;
+  try {
+    status("Preparing token…");
+    const c = conn(); const owner = state.owner;
+    const T22 = new PublicKey(TOKEN_2022);
+    const mintKp = Keypair.generate(); const mint = mintKp.publicKey;
+    const mintLen = spl.getMintLen([spl.ExtensionType.MetadataPointer]);
+    const metaLen = spl.TYPE_SIZE + spl.LENGTH_SIZE + tmd.pack({ mint, name, symbol, uri, additionalMetadata: [] }).length;
+    const lamports = await c.getMinimumBalanceForRentExemption(mintLen + metaLen);
+    const ata = spl.getAssociatedTokenAddressSync(mint, owner, false, T22);
+    const ixs = [
+      SystemProgram.createAccount({ fromPubkey: owner, newAccountPubkey: mint, space: mintLen, lamports, programId: T22 }),
+      spl.createInitializeMetadataPointerInstruction(mint, owner, mint, T22),
+      spl.createInitializeMintInstruction(mint, decimals, owner, null, T22),
+      tmd.createInitializeInstruction({ programId: T22, metadata: mint, updateAuthority: owner, mint, mintAuthority: owner, name, symbol, uri }),
+      spl.createAssociatedTokenAccountIdempotentInstruction(owner, ata, owner, mint, T22),
+      spl.createMintToInstruction(mint, ata, owner, supply, [], T22)
+    ];
+    if (lockSupply) ixs.push(spl.createSetAuthorityInstruction(mint, owner, spl.AuthorityType.MintTokens, null, [], T22));
+    if (lockMeta) ixs.push(tmd.createUpdateAuthorityInstruction({ programId: T22, metadata: mint, oldAuthority: owner, newAuthority: null }));
+    status("Approve the token creation in your wallet…");
+    const sig = await sendTx(ixs, [mintKp]);
+    const m = mint.toBase58();
+    $("ctOut").innerHTML = `<div class="quote">
+      <div class="note">Token created 🎉</div>
+      <div class="big">${esc(name)} ($${esc(symbol)})</div>
+      <div class="mono">Mint address: ${m}</div>
+      <div class="row" style="margin-top:10px">
+        <button class="secondary small" style="flex:0 0 auto" id="ctCopy">Copy address</button>
+        <a href="${explorerAcct(m)}" target="_blank" rel="noopener">View on Solscan</a>
+        <a href="${explorerTx(sig)}" target="_blank" rel="noopener">Transaction</a>
+      </div>
+      <p class="note"><strong>Next:</strong> your token isn't tradeable until it has a liquidity pool. Create one on <a href="https://raydium.io/liquidity/create-pool/" target="_blank" rel="noopener">Raydium</a> or <a href="https://app.meteora.ag" target="_blank" rel="noopener">Meteora</a> by pairing it with SOL — DexScreener lists it automatically once trading starts.</p>
+    </div>`;
+    $("ctCopy").onclick = async () => { try { await navigator.clipboard.writeText(m); $("ctCopy").textContent = "Copied ✓"; } catch {} };
+    status(`Token created. <a href="${explorerTx(sig)}" target="_blank" rel="noopener">View transaction</a>`, "ok");
+    refreshPickers();
+  } catch(e){ console.error(e); status("Token creation stopped: " + esc(e.message||e), "err"); }
+  finally { btn.disabled = false; }
+};
+
+/* =============== TOKEN CHECKER =============== */
+$("checkBtn").onclick = async () => {
+  const v = $("mintInput").value.trim();
+  let pk; try { pk = new PublicKey(v); } catch { $("checkOut").innerHTML = `<p class="status err">Not a valid address.</p>`; return; }
+  if (needsRpc()){ rpcNotice(); return; }
+  $("checkBtn").disabled = true; $("checkOut").innerHTML = `<p class="mono">Checking…</p>`;
+  try {
+    const m = pk.toBase58();
+    const [markets, infos] = await Promise.all([fetchMarkets([m]), fetchMintInfo(conn(), [m])]);
+    if (!infos[m]){ $("checkOut").innerHTML = `<p class="status err">That address isn't a token mint on this network.</p>`; return; }
+    const mk = markets[m], info = infos[m], r = assess(m, mk, info);
+    $("checkOut").innerHTML = `
+      <div style="margin-top:14px"><span class="tokname" style="font-size:18px">${esc(mk?.name || TRUSTED[m] || "Unknown token")}</span>
+        ${mk?.symbol?`<span class="mono">$${esc(mk.symbol)}</span>`:""} &nbsp;${badge(r)}</div>
+      <div class="reasons" style="font-size:14px;margin-top:6px">${r.reasons.map(esc).join("<br>")}</div>
+      <div class="report">
+        <div class="card"><div class="k">Price</div><div class="v">${mk?("$"+(mk.price<0.01?mk.price.toPrecision(3):mk.price.toFixed(4))):"–"}</div></div>
+        <div class="card"><div class="k">Market cap</div><div class="v">${mk?usd(mk.mcap):"–"}</div></div>
+        <div class="card"><div class="k">Liquidity</div><div class="v">${mk?usd(mk.liq):"–"}</div></div>
+        <div class="card"><div class="k">24h change</div><div class="v">${mk?pct(mk.chg24):"–"}</div></div>
+        <div class="card"><div class="k">24h trades</div><div class="v">${mk?mk.txns24.toLocaleString():"–"}</div></div>
+        <div class="card"><div class="k">Pair age</div><div class="v">${mk?ageStr(mk.created):"–"}</div></div>
+        <div class="card"><div class="k">Mint authority</div><div class="v">${info.mintAuthority?"Active ⚠️":"Revoked ✓"}</div></div>
+        <div class="card"><div class="k">Freeze authority</div><div class="v">${info.freezeAuthority?"Active ⚠️":"Revoked ✓"}</div></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        ${mk?`<a href="${esc(mk.url)}" target="_blank" rel="noopener">Chart on DexScreener</a>`:""}
+        <a href="#" data-swapmint="${esc(m)}">Swap for this token</a>
+      </div>`;
+  } catch(e){ $("checkOut").innerHTML = `<p class="status err">Check failed: ${esc(e.message||e)}</p>`; }
+  finally { $("checkBtn").disabled = false; }
+};
+
+/* =============== TRENDING =============== */
+async function loadTrending(){
+  $("trendBtn").disabled = true;
+  $("trendTable").innerHTML = `<tr><td class="mono">Loading…</td></tr>`;
+  try {
+    const [boosts, profiles] = await Promise.all([
+      fetch("https://api.dexscreener.com/token-boosts/top/v1").then(r=>r.json()).catch(()=>[]),
+      fetch("https://api.dexscreener.com/token-profiles/latest/v1").then(r=>r.json()).catch(()=>[])
+    ]);
+    const boosted = new Set((Array.isArray(boosts)?boosts:[]).filter(b=>b.chainId==="solana").map(b=>b.tokenAddress));
+    const mints = [...new Set([...(Array.isArray(boosts)?boosts:[]), ...(Array.isArray(profiles)?profiles:[])].filter(x=>x.chainId==="solana").map(x=>x.tokenAddress))];
+    const markets = await fetchMarkets(mints);
+    state.trend = mints.filter(m=>markets[m]).map(m => ({ mint:m, boosted: boosted.has(m), ...markets[m], risk: assess(m, markets[m], null) }));
+    renderTrending();
+  } catch(e){ $("trendTable").innerHTML = `<tr><td class="status err">Could not load trending: ${esc(e.message||e)}</td></tr>`; }
+  finally { $("trendBtn").disabled = false; }
+}
+function renderTrending(){
+  const key = $("trendSort").value;
+  const list = [...state.trend].sort((a,b) => key==="vol" ? b.vol24-a.vol24 : key==="chg" ? (b.chg24??-1e9)-(a.chg24??-1e9) : key==="mcap" ? b.mcap-a.mcap : (b.created||0)-(a.created||0));
+  $("trendTable").innerHTML = `<tr><th>Token</th><th class="num">Market cap</th><th class="num">24h vol</th><th class="num">24h</th><th class="num hide-sm">Liquidity</th><th class="num hide-sm">Age</th><th>Quick check</th><th></th></tr>` +
+    (list.length ? list.map(t => `<tr>
+      <td><span class="tokname">${esc(t.symbol)}</span> ${t.boosted?`<span class="badge bp">Boosted</span>`:""}<div class="mono">${esc(t.name)}</div></td>
+      <td class="num">${usd(t.mcap)}</td><td class="num">${usd(t.vol24)}</td><td class="num">${pct(t.chg24)}</td>
+      <td class="num hide-sm">${usd(t.liq)}</td><td class="num hide-sm">${ageStr(t.created)}</td>
+      <td>${badge(t.risk)}</td>
+      <td><a href="${esc(t.url)}" target="_blank" rel="noopener">Chart</a> · <a href="#" data-checkmint="${esc(t.mint)}">Check</a> · <a href="#" data-swapmint="${esc(t.mint)}">Swap</a></td>
+    </tr>`).join("") : `<tr><td class="mono">No Solana tokens in the feed right now.</td></tr>`);
+}
+$("trendBtn").onclick = loadTrending;
+$("trendSort").onchange = renderTrending;
+
+
+/* =============== INTELLIGENCE: shared =============== */
+const PROGRAMS = {
+  "11111111111111111111111111111111":"System",
+  [TOKEN_PROGRAM]:"Token Program", [TOKEN_2022]:"Token-2022",
+  "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL":"Associated Token Account",
+  "ComputeBudget111111111111111111111111111111":"Compute Budget",
+  "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4":"Jupiter",
+  "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8":"Raydium AMM",
+  "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C":"Raydium CPMM",
+  "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK":"Raydium CLMM",
+  "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc":"Orca Whirlpool",
+  "LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo":"Meteora DLMM",
+  "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG":"Meteora DAMM v2",
+  "pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ":"Pump.fun fees",
+  "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P":"Pump.fun",
+  "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA":"PumpSwap",
+  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr":"Memo",
+  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s":"Metaplex Metadata"
+};
+const SYSTEM = "11111111111111111111111111111111";
+const symCache = { [WSOL]: "SOL" };
+async function ensureSymbols(mints){
+  const need = [...new Set(mints)].filter(m => !symCache[m]);
+  if (!need.length) return;
+  const mk = await fetchMarkets(need);
+  need.forEach(m => symCache[m] = mk[m]?.symbol || TRUSTED[m] || short(m));
+}
+const mintsOf = d => [...d.tok.map(t=>t.mint), ...(d.transfers||[]).map(t=>t.mint).filter(Boolean)];
+const fmtAmt = n => Math.abs(n) >= 1e6 ? (Math.abs(n)/1e6).toFixed(2)+"M" : Math.abs(n) >= 1e3 ? (Math.abs(n)/1e3).toFixed(1)+"K" : Math.abs(n).toLocaleString(undefined,{maximumFractionDigits:4});
+const isPda = a => { try { return !PublicKey.isOnCurve(new PublicKey(a).toBytes()); } catch { return false; } };
+const timeAgo = t => { if (!t) return "–"; const s = Date.now()/1000 - t; return s<60?Math.round(s)+"s ago":s<3600?Math.round(s/60)+"m ago":s<86400?Math.round(s/3600)+"h ago":Math.round(s/86400)+"d ago"; };
+
+/* Fetch a parsed transaction straight from the RPC. Solana mainnet now carries version-1
+   transactions, which web3.js 1.x refuses to parse, so we request and read the JSON ourselves. */
+async function rpcGetTx(sig){
+  const call = async ver => {
+    const r = await fetch(rpcUrl(), { method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ jsonrpc:"2.0", id:1, method:"getTransaction", params:[sig, { encoding:"jsonParsed", maxSupportedTransactionVersion:ver, commitment:"confirmed" }] }) });
+    if (r.status === 429) throw new Error("RPC rate limit hit — try again in a moment");
+    const j = await r.json(); if (j.error) throw new Error(j.error.message); return j.result;
+  };
+  try { return await call(1); }
+  catch(e){ if (/maxSupportedTransactionVersion|version/i.test(e.message) && !/not supported by the requesting client/i.test(e.message)) return await call(0); throw e; }
+}
+/* limited-concurrency transaction fetch (works on free RPC plans without batch support) */
+async function getTxs(sigs, conc=4){
+  const c = conn(); const out = new Array(sigs.length); let i = 0;
+  await Promise.all(Array.from({length:Math.min(conc, sigs.length)}, async () => {
+    while (i < sigs.length){ const k = i++;
+      try { out[k] = await rpcGetTx(sigs[k]); } catch { out[k] = null; }
+    }
+  }));
+  return out;
+}
+
+/* balance changes from a parsed (executed) transaction */
+function txDeltas(ptx){
+  const keys = ptx.transaction.message.accountKeys.map(k => (k.pubkey || k).toString());
+  const meta = ptx.meta || {};
+  const sol = {};
+  keys.forEach((k,i) => { const d = (meta.postBalances?.[i] ?? 0) - (meta.preBalances?.[i] ?? 0); if (d) sol[k] = (sol[k]||0) + d; });
+  const byIdx = {};
+  (meta.preTokenBalances||[]).forEach(b => byIdx[b.accountIndex] = { owner:b.owner, mint:b.mint, dec:b.uiTokenAmount.decimals, pre:BigInt(b.uiTokenAmount.amount), post:0n });
+  (meta.postTokenBalances||[]).forEach(b => { const e = byIdx[b.accountIndex] || (byIdx[b.accountIndex] = { owner:b.owner, mint:b.mint, dec:b.uiTokenAmount.decimals, pre:0n, post:0n }); e.post = BigInt(b.uiTokenAmount.amount); e.owner = e.owner || b.owner; });
+  const agg = {};
+  Object.values(byIdx).forEach(e => { if (e.pre === e.post) return; const k = e.owner+"|"+e.mint; (agg[k] ||= { owner:e.owner, mint:e.mint, dec:e.dec, raw:0n }).raw += e.post - e.pre; });
+  const tok = Object.values(agg).filter(t => t.raw !== 0n).map(t => ({ ...t, delta: Number(t.raw) / 10**t.dec }));
+  const ixs = [...ptx.transaction.message.instructions, ...(meta.innerInstructions||[]).flatMap(x => x.instructions)];
+  const flags = [], transfers = [];
+  for (const ix of ixs){
+    const p = ix.parsed; if (!p || typeof p !== "object") continue; const info = p.info || {};
+    if (p.type === "transferChecked") transfers.push({ from: info.authority || info.source, to: info.destination, mint: info.mint, ui: Number(info.tokenAmount?.uiAmountString || 0) });
+    if (p.type === "transfer" && info.lamports != null) transfers.push({ from: info.source, to: info.destination, mint: WSOL, ui: info.lamports / LAMPORTS_PER_SOL });
+    if (p.type === "transfer" && info.amount != null && info.lamports == null) transfers.push({ from: info.authority || info.source, to: info.destination, mint: null, ui: Number(info.amount) });
+    if (p.type === "approve" || p.type === "approveChecked") flags.push({ level:2, owner:info.owner, text:`Approved ${short(info.delegate)} to spend tokens from ${short(info.source)}` });
+    if (p.type === "setAuthority" && info.authorityType === "accountOwner") flags.push({ level:3, owner:info.authority, text:`Handed ownership of token account ${short(info.account)} to ${short(info.newAuthority)} — common drainer trick` });
+    if (p.type === "closeAccount" && info.destination && info.owner && info.destination !== info.owner) flags.push({ level:2, owner:info.owner, text:`Closed token account and sent its SOL to ${short(info.destination)}` });
+    if (p.type === "initializeMint" || p.type === "initializeMint2") flags.push({ level:0, text:`Created a new token ${short(info.mint)}` });
+    if (p.type === "burn" || p.type === "burnChecked") flags.push({ level:0, owner:info.authority, text:`Burned tokens` });
+  }
+  const programs = [...new Set(ixs.map(ix => (ix.programId||"").toString()))].map(p => PROGRAMS[p] || short(p));
+  return { payer: keys[0], fee: meta.fee || 0, sol, tok, flags, transfers, programs, err: meta.err || null, time: ptx.blockTime || null };
+}
+
+/* turn balance changes into a plain-English sentence */
+function classify(d, focus){
+  focus = focus || d.payer;
+  let solNet = (d.sol[focus] || 0) + (focus === d.payer ? d.fee : 0);
+  const mine = d.tok.filter(t => t.owner === focus);
+  mine.filter(t => t.mint === WSOL).forEach(t => solNet += Number(t.raw));
+  const ins = mine.filter(t => t.mint !== WSOL && t.delta > 0), outs = mine.filter(t => t.mint !== WSOL && t.delta < 0);
+  const S = l => (Math.abs(l)/LAMPORTS_PER_SOL).toLocaleString(undefined,{maximumFractionDigits:4});
+  const T = list => list.map(t => `${fmtAmt(t.delta)} ${symCache[t.mint] || short(t.mint)}`).join(" + ");
+  const other = (mint, sign) => { const o = d.tok.filter(t => t.mint === mint && t.owner !== focus && Math.sign(t.delta) === sign).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta))[0]; return o ? short(o.owner) : null; };
+  const solOther = sign => { const e = Object.entries(d.sol).filter(([k,v]) => k !== focus && Math.sign(v) === sign).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0]; return e ? short(e[0]) : null; };
+  const big = Math.abs(solNet) >= 1e6; // ≥ 0.001 SOL
+  let kind = "other", text;
+  if (ins.length && outs.length){ kind = "swap"; text = `Swapped ${T(outs)} for ${T(ins)}`; }
+  else if (ins.length && solNet < -1e6){ kind = "buy"; text = `Bought ${T(ins)} for ${S(solNet)} SOL`; }
+  else if (outs.length && solNet > 1e6){ kind = "sell"; text = `Sold ${T(outs)} for ${S(solNet)} SOL`; }
+  else if (outs.length){ kind = "send"; const to = other(outs[0].mint, 1); text = `Sent ${T(outs)}${to?` to ${to}`:""}`; }
+  else if (ins.length){ kind = "receive"; const fr = other(ins[0].mint, -1); text = `Received ${T(ins)}${fr?` from ${fr}`:""}`; }
+  else if (big && solNet < 0){ kind = "send"; const to = solOther(1); text = `Sent ${S(solNet)} SOL${to?` to ${to}`:""}`; }
+  else if (big && solNet > 0){ kind = "receive"; const fr = solOther(-1); text = `Received ${S(solNet)} SOL${fr?` from ${fr}`:""}`; }
+  else if (d.transfers?.length){ const t = d.transfers[0]; kind = "transfer"; text = `Moved ${fmtAmt(t.ui)} ${t.mint ? (symCache[t.mint] || short(t.mint)) : "tokens"} from ${short(t.from)} to account ${short(t.to)}${d.transfers.length>1?` (+${d.transfers.length-1} more transfer${d.transfers.length>2?"s":""})`:""}`; }
+  else text = `Interacted with ${d.programs.filter(p => !["System","Compute Budget","Token Program","Associated Token Account"].includes(p)).join(", ") || "Solana programs"}`;
+  const flags = d.flags.filter(f => !f.owner || f.owner === focus || f.level === 3);
+  const level = flags.reduce((m,f)=>Math.max(m,f.level), 0);
+  return { kind, text, solNet, flags, level, programs: d.programs, err: d.err, time: d.time, fee: d.fee };
+}
+function explainCard(ex, sig){
+  return `<div class="quote">
+    <div class="big" style="font-size:18px">${esc(ex.text)}${ex.err?` <span class="badge b3">Failed</span>`:""}</div>
+    <div class="mono">${ex.time?timeAgo(ex.time)+" · ":""}Fee ${sol(ex.fee)} SOL · Programs: ${esc(ex.programs.join(", "))}${sig?` · <a href="${explorerTx(sig)}" target="_blank" rel="noopener">Solscan</a>`:""}</div>
+    ${ex.flags.map(f => `<div class="${f.level>=2?"warnbox":"note"}">${f.level>=3?"🚨 ":f.level>=2?"⚠️ ":""}${esc(f.text)}</div>`).join("")}
+  </div>`;
+}
+
+/* =============== TX INSPECTOR (explain + simulate) =============== */
+$("inspBtn").onclick = async () => {
+  const raw = $("inspIn").value.trim(); if (!raw) return;
+  if (needsRpc()){ rpcNotice(); return; }
+  let focus = $("inspFocus").value.trim() || null;
+  if (focus){ try { new PublicKey(focus); } catch { status("Focus wallet isn't a valid address.", "err"); return; } }
+  $("inspBtn").disabled = true; $("inspOut").innerHTML = `<p class="mono">Inspecting…</p>`;
+  try {
+    const looksSig = /^[1-9A-HJ-NP-Za-km-z]{80,90}$/.test(raw);
+    if (looksSig){
+      const ptx = await rpcGetTx(raw);
+      if (!ptx){ $("inspOut").innerHTML = `<p class="status err">Transaction not found on ${net()}.</p>`; return; }
+      const d = txDeltas(ptx); await ensureSymbols(mintsOf(d));
+      $("inspOut").innerHTML = `<p class="note" style="margin-top:12px">What happened${focus?` (for ${short(focus)})`:""}:</p>` + explainCard(classify(d, focus), raw) + changesTable(d, focus || d.payer);
+    } else {
+      $("inspOut").innerHTML = await simulateRaw(raw, focus);
+    }
+  } catch(e){ console.error(e); $("inspOut").innerHTML = `<p class="status err">Couldn't inspect that: ${esc(e.message||e)}</p>`; }
+  finally { $("inspBtn").disabled = false; }
+};
+function changesTable(d, focus){
+  const rows = [];
+  Object.entries(d.sol).forEach(([k,v]) => { if (Math.abs(v) >= 1000) rows.push({ who:k, what:"SOL", amt: v/LAMPORTS_PER_SOL }); });
+  d.tok.forEach(t => rows.push({ who:t.owner, what: symCache[t.mint] || short(t.mint), amt: t.delta }));
+  rows.sort((a,b) => (b.who===focus) - (a.who===focus) || Math.abs(b.amt)-Math.abs(a.amt));
+  return `<details style="margin-top:10px"><summary class="note">All balance changes (${rows.length})</summary><div class="scroll"><table>
+    <tr><th>Wallet</th><th>Asset</th><th class="num">Change</th></tr>
+    ${rows.slice(0,40).map(r => `<tr><td class="mono">${r.who===focus?"<strong>you</strong> · ":""}${esc(short(r.who))}${isPda(r.who)?" (program/pool)":""}</td><td>${esc(r.what)}</td><td class="num ${r.amt>=0?"up":"down"}">${r.amt>=0?"+":"−"}${fmtAmt(r.amt)}</td></tr>`).join("")}
+  </table></div></details>`;
+}
+async function simulateRaw(b64, focus){
+  const bytes = Buffer.from(b64.replace(/\s+/g,""), "base64");
+  let vtx;
+  try { vtx = VersionedTransaction.deserialize(bytes); }
+  catch { try { vtx = new VersionedTransaction(Transaction.from(bytes).compileMessage()); }
+          catch { throw new Error("couldn't read that transaction. It may use Solana's newest transaction format, which the simulator can't decode yet. Paste its signature after it's sent to see what it did."); } }
+  const msg = vtx.message, keys = msg.staticAccountKeys.map(k => k.toBase58());
+  const payer = keys[0]; focus = focus || payer;
+  const writable = keys.filter((k,i) => msg.isAccountWritable(i)).slice(0, 60);
+  const c = conn();
+  const [preInfos, sim] = await Promise.all([
+    c.getMultipleAccountsInfo(writable.map(k => new PublicKey(k))),
+    c.simulateTransaction(vtx, { sigVerify:false, replaceRecentBlockhash:true, accounts:{ encoding:"base64", addresses: writable } })
+  ]);
+  const v = sim.value;
+  const d = { payer, fee:0, sol:{}, tok:[], flags:[], transfers:[], programs:[], err: v.err, time:null };
+  const TOKPROGS = [TOKEN_PROGRAM, TOKEN_2022];
+  const asInfo = a => a ? { data: Buffer.from(Array.isArray(a.data) ? a.data[0] : "", "base64"), owner: new PublicKey(a.owner), lamports: a.lamports, executable: a.executable, rentEpoch: a.rentEpoch } : null;
+  const unpack = (addr, info) => { if (!info || !TOKPROGS.includes(info.owner.toBase58())) return null; try { return spl.unpackAccount(new PublicKey(addr), info, info.owner); } catch { return null; } };
+  const rows = writable.map((k, i) => {
+    const bInfo = preInfos[i], aInfo = asInfo(v.accounts?.[i]);
+    return { k, bInfo, aInfo, tb: unpack(k, bInfo), ta: unpack(k, aInfo) };
+  });
+  const mints = [...new Set(rows.filter(r => r.tb || r.ta).map(r => (r.tb || r.ta).mint.toBase58()))];
+  const mintInfo = mints.length ? await fetchMintInfo(c, mints) : {};
+  await ensureSymbols(mints);
+  rows.forEach(({ k, bInfo, aInfo, tb, ta }) => {
+    if (tb || ta){
+      const t = tb || ta, mint = t.mint.toBase58(), owner = t.owner.toBase58(), dec = mintInfo[mint]?.decimals ?? 0;
+      const raw = (ta?.amount ?? 0n) - (tb?.amount ?? 0n);
+      if (raw !== 0n) d.tok.push({ owner, mint, dec, raw, delta: Number(raw)/10**dec });
+      const sym = symCache[mint] || short(mint);
+      if (tb && ta && !tb.owner.equals(ta.owner)) d.flags.push({ level:3, text:`Hands ownership of your ${sym} account to ${short(ta.owner.toBase58())} — common drainer trick` });
+      if (ta?.delegate && !(tb?.delegate && tb.delegate.equals(ta.delegate))) d.flags.push({ level:2, owner, text:`Approves ${short(ta.delegate.toBase58())} to spend up to ${fromBase(ta.delegatedAmount, dec)} of your ${sym}` });
+      if (tb && !aInfo) d.flags.push({ level: owner===focus ? 1 : 0, owner, text:`Closes token account ${short(k)}` });
+    } else {
+      const dl = (aInfo?.lamports ?? 0) - (bInfo?.lamports ?? 0);
+      if (dl) d.sol[k] = dl;
+    }
+  });
+  d.programs = [...new Set(msg.compiledInstructions.map(ix => keys[ix.programIdIndex]).filter(Boolean))].map(p => PROGRAMS[p] || short(p));
+  await ensureSymbols(d.tok.map(t => t.mint));
+  const unknown = d.programs.filter(p => !Object.values(PROGRAMS).includes(p));
+  if (unknown.length) d.flags.push({ level:1, text:`Calls unrecognised program(s): ${unknown.join(", ")} — make sure you trust the site that gave you this` });
+  if (msg.addressTableLookups?.length) d.flags.push({ level:0, text:"Uses address lookup tables — some accounts couldn't be previewed" });
+  const ex = classify(d, focus);
+  return `<p class="note" style="margin-top:12px">Simulation result${v.err ? "" : ` · ${v.unitsConsumed?.toLocaleString() || "?"} compute units`}:</p>
+    ${v.err ? `<div class="warnbox">This transaction would <strong>fail</strong>: ${esc(JSON.stringify(v.err))}<div class="mono">${(v.logs||[]).slice(-4).map(esc).join("<br>")}</div></div>` : ""}
+    ${explainCard({ ...ex, text: ex.level >= 3 ? "🚨 Do not sign — this transaction looks like a wallet drainer" : "If signed: " + ex.text.charAt(0).toLowerCase() + ex.text.slice(1) }, null)}
+    ${changesTable(d, focus)}`;
+}
+
+/* =============== WATCHLIST & ALERTS =============== */
+const watch = {
+  list(){ try { return JSON.parse(store.get("ontrace_watch") || "[]"); } catch { return []; } },
+  save(l){ store.set("ontrace_watch", JSON.stringify(l)); }
+};
+let watchMem = watch.list();
+function addToWatch(addr, label){
+  try { addr = new PublicKey(addr).toBase58(); } catch { status("That isn't a valid wallet address.", "err"); return false; }
+  if (watchMem.some(w => w.addr === addr)){ status("Already on your watchlist.", ""); return false; }
+  watchMem.push({ addr, label: (label || short(addr)).slice(0,40), lastSig:null });
+  watch.save(watchMem); status(`Added ${esc(label || short(addr))} to your watchlist.`, "ok"); return true;
+}
+$("watchAdd").onclick = () => { if (addToWatch($("watchAddr").value.trim(), $("watchLabel").value.trim())){ $("watchAddr").value = ""; $("watchLabel").value = ""; refreshWatch(); } };
+async function refreshWatch(){
+  const tbl = $("watchTable");
+  if (!watchMem.length){ tbl.innerHTML = `<tr><td class="mono">No wallets yet. Add one above, or use “Watch” buttons in the Dev tracker and Graph.</td></tr>`; return; }
+  tbl.innerHTML = `<tr><th>Wallet</th><th class="num">SOL</th><th class="num">Value</th><th class="num hide-sm">Tokens</th><th class="num">Last active</th><th></th></tr>` +
+    watchMem.map((w,i) => `<tr id="wrow${i}"><td><span class="tokname">${esc(w.label)}</span><div class="mono">${esc(short(w.addr))}</div></td><td class="num" colspan="4"><span class="mono">${needsRpc()?"Add an RPC key in Settings":"Loading…"}</span></td><td></td></tr>`).join("");
+  if (needsRpc()) return;
+  const c = conn();
+  for (let i = 0; i < watchMem.length; i++){
+    const w = watchMem[i];
+    try {
+      const pk = new PublicKey(w.addr);
+      const [lam, accts, sigs] = await Promise.all([c.getBalance(pk), fetchTokenAccounts(c, pk), c.getSignaturesForAddress(pk, { limit:1 })]);
+      const held = accts.filter(a => a.amount > 0n);
+      const mk = await fetchMarkets([...held.map(a=>a.mint), WSOL]);
+      const val = lam/LAMPORTS_PER_SOL * (mk[WSOL]?.price||0) + held.reduce((s,a) => { const m = mk[a.mint]; return s + (m && m.liq >= 1000 ? a.ui*m.price : 0); }, 0);
+      $("wrow"+i).innerHTML = `<td><span class="tokname">${esc(w.label)}</span><div class="mono">${esc(short(w.addr))}</div></td>
+        <td class="num">${(lam/LAMPORTS_PER_SOL).toFixed(3)}</td><td class="num">${usd(val)}</td><td class="num hide-sm">${held.length}</td>
+        <td class="num">${timeAgo(sigs[0]?.blockTime)}</td>
+        <td><a href="#" data-wdetail="${i}">Activity</a> · <a href="#" data-wgraph="${i}">Graph</a> · <a href="#" data-wdel="${i}">Remove</a></td>`;
+    } catch(e){ $("wrow"+i).innerHTML = `<td><span class="tokname">${esc(w.label)}</span><div class="mono">${esc(short(w.addr))}</div></td><td colspan="4" class="mono">Couldn't load: ${esc(String(e.message).slice(0,60))}</td><td><a href="#" data-wdel="${i}">Remove</a></td>`; }
+  }
+}
+async function showWatchDetail(i){
+  const w = watchMem[i]; if (!w) return;
+  $("watchDetail").innerHTML = `<p class="mono" style="margin-top:12px">Loading recent activity for ${esc(w.label)}…</p>`;
+  try {
+    const sigs = await conn().getSignaturesForAddress(new PublicKey(w.addr), { limit:10 });
+    const ptxs = await getTxs(sigs.map(s=>s.signature));
+    const ds = ptxs.map(p => p ? txDeltas(p) : null);
+    await ensureSymbols(ds.filter(Boolean).flatMap(mintsOf));
+    $("watchDetail").innerHTML = `<h2 style="margin-top:16px;font-size:15px">Recent activity — ${esc(w.label)}</h2>` +
+      ds.map((d,k) => d ? explainCard(classify(d, w.addr), sigs[k].signature) : "").join("");
+  } catch(e){ $("watchDetail").innerHTML = `<p class="status err">${esc(e.message||e)}</p>`; }
+}
+document.addEventListener("click", e => {
+  const a = e.target.closest("[data-wdetail],[data-wgraph],[data-wdel],[data-watchadd],[data-graphnode]"); if (!a) return;
+  e.preventDefault();
+  if (a.dataset.wdetail) showWatchDetail(+a.dataset.wdetail);
+  if (a.dataset.wgraph){ $("graphAddr").value = watchMem[+a.dataset.wgraph].addr; showTab("graph"); $("graphBtn").click(); }
+  if (a.dataset.wdel){ watchMem.splice(+a.dataset.wdel, 1); watch.save(watchMem); $("watchDetail").innerHTML = ""; refreshWatch(); }
+  if (a.dataset.watchadd){ addToWatch(a.dataset.watchadd, a.dataset.label || ""); }
+  if (a.dataset.graphnode){ $("graphAddr").value = a.dataset.graphnode; $("graphBtn").click(); }
+});
+$("watchRefresh").onclick = refreshWatch;
+
+let alertTimer = null, alertBusy = false;
+function alertMatches(ex){
+  const rule = $("alertRule").value, min = parseFloat($("alertMin").value) || 0;
+  const solAbs = Math.abs(ex.solNet)/LAMPORTS_PER_SOL;
+  if (ex.level >= 2) return true;
+  if (rule === "all") return true;
+  if (rule === "trades") return ["buy","sell","swap"].includes(ex.kind);
+  return solAbs >= min;
+}
+async function pollAlerts(){
+  if (alertBusy || needsRpc()) return; alertBusy = true;
+  const c = conn();
+  try {
+    for (const w of watchMem){
+      const sigs = await c.getSignaturesForAddress(new PublicKey(w.addr), { limit:5 });
+      if (!sigs.length) continue;
+      if (!w.lastSig){ w.lastSig = sigs[0].signature; continue; }
+      const fresh = []; for (const s of sigs){ if (s.signature === w.lastSig) break; fresh.push(s.signature); }
+      if (!fresh.length) continue;
+      w.lastSig = sigs[0].signature;
+      const ptxs = await getTxs(fresh.reverse());
+      for (let k = 0; k < ptxs.length; k++){
+        if (!ptxs[k]) continue;
+        const d = txDeltas(ptxs[k]); await ensureSymbols(mintsOf(d));
+        const ex = classify(d, w.addr);
+        if (!alertMatches(ex)) continue;
+        $("alertFeed").insertAdjacentHTML("afterbegin", `<div class="note" style="font-size:12px;margin-top:10px">🔔 <strong>${esc(w.label)}</strong> · ${new Date().toLocaleTimeString()}</div>` + explainCard(ex, fresh[k]));
+        try { if (Notification?.permission === "granted") new Notification(`OnTrace · ${w.label}`, { body: ex.text }); } catch {}
+      }
+    }
+    watch.save(watchMem);
+    $("alertState").textContent = `Watching ${watchMem.length} wallet(s) · last check ${new Date().toLocaleTimeString()}`;
+  } catch(e){ $("alertState").textContent = "Check failed: " + String(e.message).slice(0,80); }
+  finally { alertBusy = false; }
+}
+$("alertToggle").onclick = async () => {
+  if (alertTimer){ clearInterval(alertTimer); alertTimer = null; $("alertToggle").textContent = "Start alerts"; $("alertState").textContent = "Alerts stopped."; return; }
+  if (needsRpc()){ rpcNotice(); return; }
+  if (!watchMem.length){ status("Add at least one wallet to your watchlist first.", "err"); return; }
+  try { if (window.Notification && Notification.permission === "default") await Notification.requestPermission(); } catch {}
+  $("alertToggle").textContent = "Stop alerts";
+  $("alertState").textContent = "Starting…";
+  await pollAlerts();
+  alertTimer = setInterval(pollAlerts, 30000);
+};
+
+/* =============== DEV TRACKER =============== */
+async function findCreator(mint){
+  const c = conn(); let before, oldest = null, reached = false;
+  for (let page = 0; page < 15; page++){
+    const sigs = await c.getSignaturesForAddress(new PublicKey(mint), { before, limit:1000 });
+    if (!sigs.length){ reached = true; break; }
+    oldest = sigs[sigs.length-1];
+    if (sigs.length < 1000){ reached = true; break; }
+    before = oldest.signature;
+    status(`Tracing token history… (${(page+1)*1000}+ transactions scanned)`);
+  }
+  if (!reached || !oldest) return null;
+  const ptx = await rpcGetTx(oldest.signature);
+  return ptx ? { dev: (ptx.transaction.message.accountKeys[0].pubkey || ptx.transaction.message.accountKeys[0]).toString(), when: ptx.blockTime, sig: oldest.signature } : null;
+}
+$("devBtn").onclick = async () => {
+  const mintStr = $("devMint").value.trim(); let mintPk;
+  try { mintPk = new PublicKey(mintStr); } catch { status("Paste a valid token mint address.", "err"); return; }
+  if (needsRpc()){ rpcNotice(); return; }
+  const manual = $("devManual").value.trim();
+  if (manual){ try { new PublicKey(manual); } catch { status("The dev wallet you entered isn't valid.", "err"); return; } }
+  $("devBtn").disabled = true; $("devOut").innerHTML = `<p class="mono">Tracing…</p>`;
+  try {
+    const c = conn(); const m = mintPk.toBase58();
+    const [infos, markets, supplyRes, largest] = await Promise.all([
+      fetchMintInfo(c, [m]), fetchMarkets([m]), c.getTokenSupply(mintPk), c.getTokenLargestAccounts(mintPk)
+    ]);
+    const info = infos[m]; if (!info) throw new Error("That address isn't a token mint on this network.");
+    const mk = markets[m]; symCache[m] = mk?.symbol || TRUSTED[m] || short(m);
+    const supply = Number(supplyRes.value.uiAmountString || supplyRes.value.uiAmount || 0);
+    let dev = manual || null, how = manual ? "entered manually" : "", when = null;
+    if (!dev){ const found = await findCreator(m); if (found){ dev = found.dev; when = found.when; how = "paid for the token's first transaction"; } }
+    if (!dev && info.mintAuthority){ dev = info.mintAuthority; how = "current mint authority"; }
+    clearStatus();
+    // top holders
+    const top = largest.value.slice(0, 20);
+    const accInfo = await c.getMultipleParsedAccounts(top.map(t => t.address));
+    const holders = top.map((t,i) => { const owner = accInfo.value[i]?.data?.parsed?.info?.owner || "?"; const ui = Number(t.uiAmountString ?? t.uiAmount ?? 0); return { owner, ui, pct: supply ? ui/supply*100 : 0, pool: owner !== "?" && isPda(owner) }; });
+    const wallets = holders.filter(h => !h.pool);
+    const top10 = wallets.slice(0,10).reduce((s,h)=>s+h.pct, 0);
+    // dev holdings & activity
+    let devHtml = `<div class="warnbox">Couldn't identify the creator automatically — this token has over 15,000 transactions. If you know the dev wallet, paste it in the second box and run again.</div>`;
+    const signals = [];
+    if (dev){
+      const devPk = new PublicKey(dev);
+      const [devLam, devAccts, devSigs] = await Promise.all([
+        c.getBalance(devPk), c.getParsedTokenAccountsByOwner(devPk, { mint: mintPk }), c.getSignaturesForAddress(devPk, { limit:30 })
+      ]);
+      const devBal = devAccts.value.reduce((s,a) => s + Number(a.account.data.parsed.info.tokenAmount.uiAmountString || 0), 0);
+      const devPct = supply ? devBal/supply*100 : 0;
+      const ptxs = await getTxs(devSigs.map(s => s.signature));
+      const acts = [];
+      ptxs.forEach((p,k) => { if (!p) return; const d = txDeltas(p); if (!d.tok.some(t => t.mint === m && t.owner === dev)) return; acts.push({ ex: classify(d, dev), sig: devSigs[k].signature }); });
+      const sells = acts.filter(a => a.ex.kind === "sell" || (a.ex.kind === "send")).length;
+      if (devPct > 10) signals.push({ l:2, t:`Dev still holds ${devPct.toFixed(1)}% of supply — a large dump is possible` });
+      else if (devPct > 3) signals.push({ l:1, t:`Dev holds ${devPct.toFixed(1)}% of supply` });
+      else signals.push({ l:0, t:`Dev holds ${devPct.toFixed(2)}% of supply` });
+      if (sells) signals.push({ l: sells >= 3 ? 2 : 1, t:`Dev sold or moved this token ${sells} time(s) in their last 30 transactions` });
+      devHtml = `<div class="report">
+          <div class="card"><div class="k">Dev wallet</div><div class="v mono" style="font-size:13px">${esc(dev)}</div><div class="h">${esc(how)}${when?` · ${timeAgo(when)}`:""}</div></div>
+          <div class="card"><div class="k">Dev holds</div><div class="v">${fmtAmt(devBal)}</div><div class="h">${devPct.toFixed(2)}% of supply</div></div>
+          <div class="card"><div class="k">Dev SOL</div><div class="v">${(devLam/LAMPORTS_PER_SOL).toFixed(3)}</div></div>
+        </div>
+        <div class="row" style="margin-top:10px"><a href="#" data-watchadd="${esc(dev)}" data-label="Dev · ${esc(symCache[m])}">+ Watch dev wallet</a><a href="#" data-graphnode="${esc(dev)}" onclick="document.querySelector('[data-tab=graph]').click()">Map dev's connections</a><a href="https://solscan.io/account/${esc(dev)}${net()==="devnet"?"?cluster=devnet":""}" target="_blank" rel="noopener">Solscan</a></div>
+        <h2 style="font-size:15px;margin-top:16px">Dev's recent moves with this token</h2>
+        ${acts.length ? acts.slice(0,8).map(a => explainCard(a.ex, a.sig)).join("") : `<p class="note">No moves with this token in the dev's last 30 transactions.</p>`}`;
+    }
+    if (top10 > 50) signals.push({ l:2, t:`Top 10 wallets hold ${top10.toFixed(1)}% of supply — very concentrated` });
+    else if (top10 > 25) signals.push({ l:1, t:`Top 10 wallets hold ${top10.toFixed(1)}% of supply` });
+    else signals.push({ l:0, t:`Top 10 wallets hold ${top10.toFixed(1)}% — well distributed` });
+    $("devOut").innerHTML = `
+      <div style="margin-top:14px"><span class="tokname" style="font-size:18px">${esc(mk?.name || symCache[m])}</span> ${mk?.symbol?`<span class="mono">$${esc(mk.symbol)}</span>`:""}
+        <span class="mono"> · ${mk?usd(mk.mcap)+" mcap · ":""}supply ${fmtAmt(supply)}</span></div>
+      <div style="margin-top:8px">${signals.map(s => `<div><span class="badge b${s.l}">${["OK","Note","Warning","Danger"][s.l]}</span> <span style="font-size:14px">${esc(s.t)}</span></div>`).join("")}</div>
+      ${devHtml}
+      <h2 style="font-size:15px;margin-top:16px">Top holders</h2>
+      <div class="scroll"><table><tr><th>#</th><th>Wallet</th><th class="num">Amount</th><th class="num">% supply</th><th></th></tr>
+      ${holders.map((h,i) => `<tr><td>${i+1}</td><td class="mono">${esc(short(h.owner))} ${h.pool?`<span class="badge b1">pool / program</span>`:""} ${h.owner===dev?`<span class="badge b2">DEV</span>`:""}</td>
+        <td class="num">${fmtAmt(h.ui)}</td><td class="num">${h.pct.toFixed(2)}%</td>
+        <td>${h.pool||h.owner==="?" ? "" : `<a href="#" data-watchadd="${esc(h.owner)}" data-label="Holder #${i+1} · ${esc(symCache[m])}">Watch</a>`}</td></tr>`).join("")}
+      </table></div>`;
+  } catch(e){ console.error(e); clearStatus(); $("devOut").innerHTML = `<p class="status err">Trace failed: ${esc(e.message||e)}</p>`; }
+  finally { $("devBtn").disabled = false; }
+};
+
+/* =============== RELATIONSHIP GRAPH =============== */
+$("graphBtn").onclick = async () => {
+  const addr = $("graphAddr").value.trim(); let pk;
+  try { pk = new PublicKey(addr); } catch { status("Paste a valid wallet address.", "err"); return; }
+  if (needsRpc()){ rpcNotice(); return; }
+  const focus = pk.toBase58(), n = parseInt($("graphN").value, 10);
+  $("graphBtn").disabled = true; $("graphOut").innerHTML = `<p class="mono">Reading the last ${n} transactions…</p>`;
+  try {
+    const c = conn(); let sigs = [], before;
+    while (sigs.length < n){ const s = await c.getSignaturesForAddress(pk, { before, limit: Math.min(1000, n - sigs.length) }); if (!s.length) break; sigs.push(...s); before = s[s.length-1].signature; if (s.length < 1000) break; }
+    const ptxs = await getTxs(sigs.map(s=>s.signature), 5);
+    const edges = {};
+    const edge = a => edges[a] ||= { addr:a, count:0, solIn:0, solOut:0, tokIn:0, tokOut:0, mints:new Set() };
+    const progs = new Set(Object.keys(PROGRAMS));
+    ptxs.forEach(p => {
+      if (!p) return; const d = txDeltas(p); const seen = new Set();
+      const fSol = (d.sol[focus]||0) + (d.payer===focus ? d.fee : 0);
+      Object.entries(d.sol).forEach(([k,v]) => {
+        if (k === focus || progs.has(k) || Math.abs(v) < 1e6 || Math.sign(v) === Math.sign(fSol) || !fSol) return;
+        const e = edge(k); if (v > 0) e.solOut += v; else e.solIn += -v; seen.add(k);
+      });
+      d.tok.filter(t => t.owner === focus).forEach(ft => {
+        d.tok.filter(t => t.mint === ft.mint && t.owner !== focus && Math.sign(t.delta) !== Math.sign(ft.delta)).forEach(t => {
+          const e = edge(t.owner); if (ft.delta < 0) e.tokOut++; else e.tokIn++; e.mints.add(t.mint); seen.add(t.owner);
+        });
+      });
+      seen.forEach(k => edges[k].count++);
+    });
+    const list = Object.values(edges).sort((a,b) => b.count - a.count).slice(0, 24);
+    if (!list.length){ $("graphOut").innerHTML = `<p class="note" style="margin-top:12px">No counterparties found in the last ${sigs.length} transactions.</p>`; return; }
+    await ensureSymbols(list.flatMap(e => [...e.mints]));
+    const W = 760, H = 520, cx = W/2, cy = H/2, R = 205, maxC = Math.max(...list.map(e=>e.count));
+    const nodes = list.map((e,i) => { const a = (i/list.length)*Math.PI*2 - Math.PI/2; return { ...e, x: cx + R*Math.cos(a), y: cy + R*Math.sin(a), pool: isPda(e.addr) }; });
+    const svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;display:block;margin:14px auto 0;background:var(--panel2);border-radius:12px">
+      ${nodes.map(nd => { const net = nd.solOut - nd.solIn; const col = net > 0 ? "#ff3bd4" : "#b6ff3b"; const w = 1 + 6*nd.count/maxC;
+        return `<line x1="${cx}" y1="${cy}" x2="${nd.x}" y2="${nd.y}" stroke="${col}" stroke-opacity=".55" stroke-width="${w.toFixed(1)}"/>`; }).join("")}
+      <circle cx="${cx}" cy="${cy}" r="30" fill="#000" stroke="#b6ff3b" stroke-width="3"/>
+      <text x="${cx}" y="${cy+4}" text-anchor="middle" fill="#f2f2f2" font-size="11" font-family="monospace">${esc(short(focus))}</text>
+      ${nodes.map(nd => `<g data-graphnode="${esc(nd.addr)}" style="cursor:pointer">
+        <circle cx="${nd.x}" cy="${nd.y}" r="${(9 + 9*nd.count/maxC).toFixed(1)}" fill="${nd.pool?"#262626":"#0d0d0d"}" stroke="${nd.pool?"#9a9a9a":"#f2f2f2"}" stroke-width="1.5"/>
+        <text x="${nd.x}" y="${nd.y + (nd.y>cy?30:-22)}" text-anchor="middle" fill="${nd.pool?"#9a9a9a":"#f2f2f2"}" font-size="10" font-family="monospace">${esc(short(nd.addr))}${nd.pool?" ·pool":""}</text>
+        <title>${esc(nd.addr)} — ${nd.count} txs</title></g>`).join("")}
+    </svg>
+    <p class="note" style="text-align:center">Line thickness = how often they interact · <span style="color:#ff3bd4">magenta</span>: this wallet sent them SOL · <span style="color:#b6ff3b">lime</span>: they sent this wallet SOL · grey nodes = programs/pools</p>`;
+    $("graphOut").innerHTML = svg + `<div class="scroll"><table><tr><th>Counterparty</th><th class="num">Txs</th><th class="num">SOL sent to them</th><th class="num">SOL from them</th><th class="hide-sm">Tokens</th><th></th></tr>
+      ${nodes.map(nd => `<tr><td class="mono">${esc(short(nd.addr))} ${nd.pool?`<span class="badge b1">program / pool</span>`:""}</td><td class="num">${nd.count}</td>
+        <td class="num">${(nd.solOut/LAMPORTS_PER_SOL).toFixed(3)}</td><td class="num">${(nd.solIn/LAMPORTS_PER_SOL).toFixed(3)}</td>
+        <td class="hide-sm mono">${esc([...nd.mints].slice(0,3).map(m=>symCache[m]||short(m)).join(", "))}</td>
+        <td><a href="#" data-graphnode="${esc(nd.addr)}">Explore</a>${nd.pool?"":` · <a href="#" data-watchadd="${esc(nd.addr)}">Watch</a>`}</td></tr>`).join("")}
+      </table></div><p class="note">Based on the last ${sigs.length} transactions of ${esc(short(focus))}.</p>`;
+  } catch(e){ console.error(e); $("graphOut").innerHTML = `<p class="status err">Couldn't map wallet: ${esc(e.message||e)}</p>`; }
+  finally { $("graphBtn").disabled = false; }
+};
+
+/* =============== TABS & SETTINGS =============== */
+const TABS = ["scan","swap","send","create","check","trending","watch","dev","graph","inspect","settings"];
+function showTab(name){
+  document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("active", x.dataset.tab===name));
+  TABS.forEach(t => $("tab-"+t).classList.toggle("hidden", t!==name));
+  if (name === "trending" && !state.trend.length) loadTrending();
+  if (name === "create") estimateCreate();
+  if (name === "watch") refreshWatch();
+  if ((name === "swap" || name === "send") && state.owner && !state.holdings) refreshPickers();
+}
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+function showRpc(){
+  $("rpcInput").value = store.get("ontrace_rpc_"+net()) || "";
+  $("rpcNow").textContent = "Using: " + rpcUrl().replace(/api-key=[^&]+/,"api-key=•••");
+}
+$("rpcSave").onclick = () => {
+  const v = $("rpcInput").value.trim();
+  if (v && !/^https:\/\//.test(v)){ status("RPC URL must start with https://", "err"); return; }
+  store.set("ontrace_rpc_"+net(), v); showRpc(); state.holdings = null;
+  if (needsRpc()) rpcNotice(); else { status("RPC saved for this network.", "ok"); refreshPickers(); }
+};
+$("network").onchange = () => { showRpc(); $("results").classList.add("hidden"); state.holdings = null; clearStatus(); rpcNotice(); refreshPickers(); };
+$("connectBtn").onclick = connect;
+$("disconnectBtn").onclick = disconnect;
+$("scanBtn").onclick = scan;
+$("addrInput").addEventListener("keydown", e => { if (e.key === "Enter") scan(); });
+$("mintInput").addEventListener("keydown", e => { if (e.key === "Enter") $("checkBtn").click(); });
+showRpc(); fillTokenSelects(); rpcNotice();
+</script>
+</body>
+</html>
