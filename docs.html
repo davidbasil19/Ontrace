@@ -95,6 +95,7 @@
       <a href="#multisend">Multi-send</a>
       <a href="#create">Create token</a>
       <a href="#checker">Token checker</a>
+      <a href="#address">Address checker</a>
       <a href="#trending">Trending</a>
       <a href="#watchlist">Watchlist &amp; alerts</a>
       <a href="#devtracker">Dev tracker</a>
@@ -129,7 +130,8 @@
       <tr><td><a href="#swap">Swap</a></td><td>Best-price trades via Jupiter with a safety check</td><td>Yes</td></tr>
       <tr><td><a href="#multisend">Multi-send</a></td><td>Send SOL or tokens to many wallets at once</td><td>Yes</td></tr>
       <tr><td><a href="#create">Create token</a></td><td>Launch a token with safe defaults</td><td>Yes</td></tr>
-      <tr><td><a href="#checker">Token checker</a></td><td>Check any token before buying</td><td>No</td></tr>
+      <tr><td><a href="#checker">Token checker</a></td><td>Check any token and its permissions before buying</td><td>No</td></tr>
+      <tr><td><a href="#address">Address checker</a></td><td>See what an address is before sending to it</td><td>No</td></tr>
       <tr><td><a href="#trending">Trending</a></td><td>See what's getting attention on Solana</td><td>No</td></tr>
       <tr><td><a href="#watchlist">Watchlist &amp; alerts</a></td><td>Follow wallets and get notified when they move</td><td>No</td></tr>
       <tr><td><a href="#devtracker">Dev tracker</a></td><td>Find a token's creator and check their behaviour</td><td>No</td></tr>
@@ -177,6 +179,7 @@
     <table>
       <tr><th>Setting</th><th>What it does</th></tr>
       <tr><td><strong>RPC endpoint</strong></td><td>The connection OnTrace uses to read Solana. <strong>A default is built in — you don't need to change this.</strong> Advanced users can paste their own from a known provider (Helius, QuickNode, Alchemy, Triton, Ankr, PublicNode); it's saved only in your browser.</td></tr>
+      <tr><td><strong>Display mode</strong></td><td><em>Beginner</em> keeps everything in plain words. <em>Advanced</em> also shows full addresses, program IDs and technical names.</td></tr>
       <tr><td><strong>Priority fee</strong></td><td>A tiny extra tip so transactions confirm faster when Solana is busy. <em>Low</em> is recommended; use <em>Medium</em> or <em>High</em> if transactions keep timing out.</td></tr>
     </table>
 
@@ -317,7 +320,37 @@ RecipientWalletAddress3</pre>
       <li>Open <strong>Token checker</strong> and paste a token's mint address (from DexScreener, Solscan or the project's site).</li>
       <li>Press <strong>Check token</strong>.</li>
     </ol>
-    <p>You'll get the risk rating with reasons, plus price, market cap, liquidity, 24h change, 24h trades, pair age, and whether mint and freeze authority are still active. Links take you to the chart or straight to Swap.</p>
+    <p>You'll get the risk rating with reasons, plus price, market cap, liquidity, 24h change, 24h trades and pair age. Links take you to the chart or straight to Swap.</p>
+    <h3>Permissions</h3>
+    <p>Below the market data, OnTrace lists every special power the token gives someone, read directly from the Solana network. Each one comes with what it means for you and <strong>what it doesn't mean</strong>, so a setting is never treated as proof of a scam on its own.</p>
+    <table>
+      <tr><th>Permission</th><th>What it lets someone do</th></tr>
+      <tr><td>Mint authority</td><td>Create more of the token, diluting holders.</td></tr>
+      <tr><td>Freeze authority</td><td>Freeze a holder's token account so the tokens can't be sent or sold.</td></tr>
+      <tr><td>Name, symbol and logo</td><td>Change the token's name, symbol or logo later.</td></tr>
+      <tr><td>Permanent delegate <em>(Token-2022)</em></td><td>Move or burn tokens from any holder's wallet, without permission.</td></tr>
+      <tr><td>Transfer fee <em>(Token-2022)</em></td><td>Take a percentage of every transfer; OnTrace also shows whether the fee can be changed.</td></tr>
+      <tr><td>Transfer hook <em>(Token-2022)</em></td><td>Run a creator-chosen program on every transfer, which could block sells.</td></tr>
+      <tr><td>Default account state <em>(Token-2022)</em></td><td>Make new holders' accounts start frozen.</td></tr>
+      <tr><td>Non-transferable <em>(Token-2022)</em></td><td>Stop the token being sent at all once received.</td></tr>
+      <tr><td>Pausable <em>(Token-2022)</em></td><td>Pause all transfers, mints and burns.</td></tr>
+      <tr><td>Close authority, confidential transfers, interest-bearing, scaled balance <em>(Token-2022)</em></td><td>Less common settings; each is explained in plain words when present.</td></tr>
+    </table>
+    <p>Open <strong>How OnTrace checked this</strong> under any result to see which data was examined, when, and what the check can't tell you.</p>
+
+    <h2 id="address">Address checker</h2>
+    <p>Paste any Solana address before you send to it. OnTrace tells you what kind of account it is and whether it's safe to send to:</p>
+    <table>
+      <tr><th>Result</th><th>Sending to it</th></tr>
+      <tr><td>Regular wallet</td><td>Safe to receive SOL and tokens.</td></tr>
+      <tr><td>Wallet address (empty, never used)</td><td>Works, but double-check it: unused addresses are a common sign of a typo or a swapped address.</td></tr>
+      <tr><td>Token account</td><td>Send to the owner wallet instead. OnTrace shows which wallet owns it.</td></tr>
+      <tr><td>Token mint</td><td>Don't send. It's a token's ID, not a wallet.</td></tr>
+      <tr><td>Program</td><td>Don't send. Programs are smart contracts, not wallets.</td></tr>
+      <tr><td>Program-controlled address (PDA) or app data account</td><td>Don't send unless an app you trust told you to. No private key exists for it.</td></tr>
+      <tr><td>Stake, vote or nonce account</td><td>Not a wallet. Don't send funds here.</td></tr>
+    </table>
+    <p>The search bar on the dashboard uses the same check: wallets are scanned, tokens open the token checker, and anything else opens the address checker.</p>
 
     <h2 id="trending">Trending</h2>
     <p>Solana tokens currently getting attention on DexScreener, refreshed when you open the tab or press <strong>Refresh</strong>.</p>

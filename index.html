@@ -324,6 +324,33 @@
   .appfoot{margin-top:auto;padding:14px 0 4px;border-top:1px solid #1c1c1c;display:flex;justify-content:space-between;gap:6px 16px;flex-wrap:wrap;font-size:11px;line-height:1.5;color:#777}
   .appfoot nav{display:flex;gap:4px 14px;flex-wrap:wrap}
   .appfoot a{color:#8a8a8a;text-decoration:none}.appfoot a:hover{color:var(--accent)}
+  /* sprint 1: explanations, permissions, address checker */
+  .adv{display:none}
+  body.adv-mode .adv{display:inline}
+  .term{display:inline;position:relative;background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit;font-weight:inherit;cursor:help;border-bottom:1px dotted #777;border-radius:0}
+  .term:hover,.term:focus{box-shadow:none !important;outline:none;border-bottom-color:var(--accent)}
+  .term::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 8px);z-index:30;width:max-content;max-width:280px;padding:10px 12px;border-radius:10px;background:#1a1a1a;border:1px solid #333;color:#e6e6e6;font-size:13px;font-weight:400;line-height:1.45;text-transform:none;letter-spacing:0;text-align:left;white-space:normal;opacity:0;visibility:hidden;transition:opacity .12s;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+  .term:hover::after,.term:focus::after{opacity:1;visibility:visible}
+  .perm{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+  .perm-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .perm h3,.idcard h3{font-family:"Orbitron",system-ui,sans-serif;font-size:15px;letter-spacing:.5px;margin:0}
+  .perm-row{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .perm-row.on{border-color:#3a3a3a}
+  .perm-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .perm-t{font-weight:700;font-size:15px}
+  .perm-m{margin:8px 0 0;font-size:14px;color:var(--text)}
+  .perm-n{margin:6px 0 0;font-size:13px;color:var(--muted)}
+  .perm-n b{color:#cfcfcf;font-weight:600}
+  .perm-x{margin-top:8px;font-size:12.5px;color:var(--muted);display:flex;gap:4px 14px;flex-wrap:wrap}
+  .who{word-break:break-all}
+  .why{margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+  .why summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent)}
+  .why-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px;font-size:13px}
+  .why-grid b{display:block;margin-bottom:4px}
+  .why-grid ul{margin:0;padding-left:18px;color:var(--muted);line-height:1.6}
+  .idcard{margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .idcard.lvl0{border-color:rgba(182,255,59,.45)} .idcard.lvl1{border-color:rgba(245,184,75,.5)} .idcard.lvl2{border-color:rgba(239,68,68,.55)}
+  @media (max-width:640px){ .why-grid{grid-template-columns:1fr} .term::after{max-width:230px} }
   @media (max-width:1100px){ .s3,.s4,.s5,.s7{grid-column:span 12} }
   @media (max-width:860px){
     .app{grid-template-columns:1fr}
@@ -451,6 +478,7 @@
       <div class="glabel">SECURITY</div>
       <button data-tab="scan"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg>Wallet scan &amp; cleanup</button>
       <button data-tab="check"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 12l2 2 4-4"/></svg>Token checker</button>
+      <button data-tab="address"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M14 10h4M14 14h3"/></svg>Address checker</button>
       <div class="glabel">INVESTIGATE</div>
       <button data-tab="inspect"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h7"/></svg>Tx inspector</button>
       <button data-tab="dev"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Dev tracker</button>
@@ -715,6 +743,19 @@
     </div>
   </section>
 
+  <!-- ================= ADDRESS CHECKER ================= -->
+  <section id="tab-address" class="hidden">
+    <div class="panel">
+      <h2>Address checker</h2>
+      <p class="sub">Paste any Solana address to see what kind of account it is before you send anything to it. Sending to a token's ID, a program or a token account instead of a wallet can lose your funds for good.</p>
+      <div class="row">
+        <input id="idAddr" placeholder="Solana address" autocomplete="off" spellcheck="false">
+        <button id="idBtn" style="flex:0 0 auto">Check address</button>
+      </div>
+      <div id="idOut"></div>
+    </div>
+  </section>
+
   <!-- ================= TRENDING ================= -->
   <section id="tab-trending" class="hidden">
     <div class="panel">
@@ -809,6 +850,14 @@
         <button id="rpcSave" class="secondary" style="flex:0 0 auto">Save</button>
       </div>
       <p class="mono" id="rpcNow" style="margin-top:10px"></p>
+    </div>
+    <div class="panel">
+      <h2>Display mode</h2>
+      <p class="sub">Beginner keeps things in plain words. Advanced also shows full addresses, program IDs and technical names.</p>
+      <select id="modeSel" style="width:auto">
+        <option value="beginner">Beginner</option>
+        <option value="advanced">Advanced</option>
+      </select>
     </div>
     <div class="panel">
       <h2>Priority fee</h2>

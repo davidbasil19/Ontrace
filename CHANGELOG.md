@@ -2,6 +2,18 @@
 
 All notable changes to OnTrace are listed here.
 
+## [1.6.0] — 2026-11-19
+
+### Added
+- **Address checker:** paste any address to learn what it is (wallet, empty or never-used wallet, token account, token mint, program, program-controlled address, app data, stake, vote or nonce account) and whether it's safe to send to. Token accounts show their owner wallet. Common programs are named.
+- **Token permissions:** the token checker now lists every authority and Token-2022 extension (mint, freeze, metadata, permanent delegate, transfer fee, transfer hook, default frozen accounts, non-transferable, pausable, close authority, confidential transfers, interest-bearing, scaled balance), each with what it means and what it doesn't mean.
+- **"How OnTrace checked this":** results show the data examined, when it was checked and what the check can't tell you.
+- **Explained terms:** hover over or tap underlined terms for a plain-language explanation.
+- **Display mode:** Beginner or Advanced (Settings). Advanced also shows full addresses, program IDs and technical names.
+
+### Changed
+- The dashboard search bar now classifies addresses: wallets are scanned, token mints open the token checker, and anything else opens the address checker.
+
 ## [1.5.1] — 2026-11-19
 
 ### Fixed

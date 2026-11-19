@@ -8,7 +8,7 @@
   }
   // Show the right screen straight away, before the (larger) app script has downloaded.
   window.addEventListener("DOMContentLoaded", function () {
-    var tabs = ["dashboard","scan","check","inspect","dev","graph","watch","trending","swap","send","create","settings"];
+    var tabs = ["dashboard","scan","check","address","inspect","dev","graph","watch","trending","swap","send","create","settings"];
     var h = location.hash.slice(1), land = document.getElementById("landing"), app = document.getElementById("app");
     if (!land || !app) return;
     if (tabs.indexOf(h) >= 0) {

@@ -188,7 +188,7 @@ async function fetchMintInfo(c, mints){
         decimals: info.decimals, programId: acc.owner.toBase58(),
         mintAuthority: info.mintAuthority || null, freezeAuthority: info.freezeAuthority || null,
         permanentDelegate: exts.includes("permanentDelegate"), transferHook: exts.includes("transferHook"),
-        transferFee: exts.includes("transferFeeConfig")
+        transferFee: exts.includes("transferFeeConfig"), exts: info.extensions || []
       };
     });
   }
@@ -527,6 +527,8 @@ document.addEventListener("click", e => {
   const uw = e.target.closest("[data-unwrap]");
   if (uw){ e.preventDefault(); const t = state.tokens[+uw.dataset.unwrap];
     runAction($("reclaimBtn"), "Unwrap SOL", () => [[closeIx(t.account, state.owner, t.programId)]], { allowTokenDecrease: true }); return; }
+  const idl = e.target.closest("[data-idlookup]");
+  if (idl){ e.preventDefault(); $("idAddr").value = idl.dataset.idlookup; showTab("address"); $("idBtn").click(); return; }
   const ck = e.target.closest("[data-checkmint]");
   if (ck){ e.preventDefault(); $("mintInput").value = ck.dataset.checkmint; showTab("check"); $("checkBtn").click(); }
 });
@@ -790,8 +792,11 @@ $("checkBtn").onclick = async () => {
   try {
     const m = pk.toBase58();
     const [markets, infos] = await Promise.all([fetchMarkets([m]), fetchMintInfo(conn(), [m])]);
-    if (!infos[m]){ $("checkOut").innerHTML = `<p class="status err">That address isn't a token mint on this network.</p>`; return; }
+    if (!infos[m]){ $("checkOut").innerHTML = `<p class="status err">That address isn't a token mint on this network. <a href="#" data-idlookup="${esc(m)}">Find out what it is</a></p>`; return; }
     const mk = markets[m], info = infos[m], r = assess(m, mk, info);
+    const tm = (info.exts || []).find(e => e.extension === "tokenMetadata");
+    const mpl = tm ? null : await fetchMplMetadata(conn(), m);
+    const meta = tm ? { mutable: !!tm.state?.updateAuthority, authority: tm.state?.updateAuthority } : mpl ? { mutable: mpl.isMutable, authority: mpl.updateAuthority } : null;
     saveCheck({ m, name: mk?.name || TRUSTED[m] || "Unknown token", sym: mk?.symbol || "", level: r.level, at: Date.now() });
     $("checkOut").innerHTML = `
       <div style="margin-top:14px"><span class="tokname" style="font-size:18px">${esc(mk?.name || TRUSTED[m] || "Unknown token")}</span>
@@ -799,14 +804,15 @@ $("checkBtn").onclick = async () => {
       <div class="reasons" style="font-size:14px;margin-top:6px">${r.reasons.map(esc).join("<br>")}</div>
       <div class="report">
         <div class="card"><div class="k">Price</div><div class="v">${mk?("$"+(mk.price<0.01?mk.price.toPrecision(3):mk.price.toFixed(4))):"–"}</div></div>
-        <div class="card"><div class="k">Market cap</div><div class="v">${mk?usd(mk.mcap):"–"}</div></div>
-        <div class="card"><div class="k">Liquidity</div><div class="v">${mk?usd(mk.liq):"–"}</div></div>
+        <div class="card"><div class="k">${term("Market cap","market-cap")}</div><div class="v">${mk?usd(mk.mcap):"–"}</div></div>
+        <div class="card"><div class="k">${term("Liquidity","liquidity")}</div><div class="v">${mk?usd(mk.liq):"–"}</div></div>
         <div class="card"><div class="k">24h change</div><div class="v">${mk?pct(mk.chg24):"–"}</div></div>
         <div class="card"><div class="k">24h trades</div><div class="v">${mk?mk.txns24.toLocaleString():"–"}</div></div>
         <div class="card"><div class="k">Pair age</div><div class="v">${mk?ageStr(mk.created):"–"}</div></div>
-        <div class="card"><div class="k">Mint authority</div><div class="v">${info.mintAuthority?"Active ⚠️":"Revoked ✓"}</div></div>
-        <div class="card"><div class="k">Freeze authority</div><div class="v">${info.freezeAuthority?"Active ⚠️":"Revoked ✓"}</div></div>
       </div>
+      ${renderPermissions(info, meta)}
+      ${whyBlock(["Token settings (authorities and extensions) read directly from the Solana network", "Price, liquidity, volume and pair age from DexScreener", meta ? "Metadata settings from the token's metadata account" : "No metadata account found for this token"],
+        ["Whether the team is honest or will use its permissions", "Whether liquidity will stay in the pool", "Off-chain risks such as fake websites or impersonation", "Problems inside a transfer-hook program's code"])}
       <div class="row" style="margin-top:12px">
         ${mk?`<a href="${esc(mk.url)}" target="_blank" rel="noopener">Chart on DexScreener</a>`:""}
         <a href="#" data-swapmint="${esc(m)}">Swap for this token</a>
@@ -1297,6 +1303,228 @@ $("graphBtn").onclick = async () => {
   finally { $("graphBtn").disabled = false; }
 };
 
+/* =============== EXPLANATIONS: glossary, display mode =============== */
+const GLOSSARY = {
+  "mint-authority": "The account allowed to create new tokens. While it exists, supply can grow and dilute holders.",
+  "freeze-authority": "The account allowed to freeze a holder's token account, so those tokens can't be sent or sold.",
+  "permanent-delegate": "An account with standing permission to move or burn tokens from any holder's account, without asking.",
+  "transfer-fee": "A percentage taken from every transfer and held back for the token's fee authority.",
+  "transfer-hook": "A program chosen by the creator that runs on every transfer. It can add rules, such as blocking some transfers.",
+  "default-state": "Whether new token accounts start frozen. If they do, the issuer must unfreeze each holder before they can move tokens.",
+  "non-transferable": "Tokens that can't be moved to another wallet once received (sometimes called soulbound).",
+  "pausable": "An authority can pause all transfers, mints and burns of the token.",
+  "close-authority": "An account allowed to close the token's mint once its supply is zero.",
+  "confidential": "Lets holders hide balances and transfer amounts using encryption.",
+  "interest": "The balance your wallet shows grows or shrinks over time at a rate set by an authority. The real token amount doesn't change.",
+  "scaled": "An authority sets a multiplier applied to the balance your wallet shows. The real token amount doesn't change.",
+  "metadata": "The token's name, symbol and logo. If it can still be changed, the token can be renamed or rebranded later.",
+  "liquidity": "Money in the trading pool. Low liquidity means big price swings and you may not be able to sell.",
+  "market-cap": "Price multiplied by supply. Easy to inflate when there's little real trading.",
+  "token-account": "A small account that holds one type of token for one wallet. Wallets create these automatically.",
+  "ata": "The standard token account for a wallet and token, found at a predictable address. Wallets send tokens here automatically.",
+  "pda": "An address controlled by a program, not by a private key. Only that program can move funds out of it.",
+  "program": "A smart contract on Solana. Programs run code; they are not wallets.",
+  "mint": "A token's ID on Solana. It defines the token but doesn't hold anyone's balance."
+};
+const term = (label, key) => GLOSSARY[key] ? `<button type="button" class="term" data-tip="${esc(GLOSSARY[key])}" aria-label="${esc(label)}: ${esc(GLOSSARY[key])}">${esc(label)}</button>` : esc(label);
+const advMode = () => store.get("ontrace_mode") === "advanced";
+function applyMode(){ document.body.classList.toggle("adv-mode", advMode()); const sel = $("modeSel"); if (sel) sel.value = advMode() ? "advanced" : "beginner"; }
+const timeNow = () => new Date().toLocaleString(undefined, { hour:"2-digit", minute:"2-digit", day:"numeric", month:"short" });
+function whyBlock(sources, cant){
+  return `<details class="why"><summary>How OnTrace checked this</summary>
+    <div class="why-grid">
+      <div><b>Data examined</b><ul>${sources.map(s => `<li>${s}</li>`).join("")}</ul></div>
+      <div><b>What this can't tell you</b><ul>${cant.map(s => `<li>${s}</li>`).join("")}</ul></div>
+    </div>
+    <p class="note" style="margin:8px 0 0">Checked ${esc(timeNow())}. Ratings are automated signals, not guarantees.</p>
+  </details>`;
+}
+
+/* =============== TOKEN PERMISSION INSPECTOR =============== */
+const MPL_METADATA = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
+async function fetchMplMetadata(c, mint){
+  try {
+    const [pda] = PublicKey.findProgramAddressSync([Buffer.from("metadata"), new PublicKey(MPL_METADATA).toBuffer(), new PublicKey(mint).toBuffer()], new PublicKey(MPL_METADATA));
+    const acc = await c.getAccountInfo(pda); if (!acc) return null;
+    const d = acc.data; let o = 1;
+    const updateAuthority = new PublicKey(d.subarray(o, o + 32)).toBase58(); o += 64; // update authority + mint
+    for (let i = 0; i < 3; i++){ const len = d.readUInt32LE(o); o += 4 + len; }    // name, symbol, uri
+    o += 2;                                                                          // seller fee
+    if (d[o] === 1){ const n = d.readUInt32LE(o + 1); o += 5 + n * 34; } else o += 1; // creators
+    o += 1;                                                                          // primary sale happened
+    return { updateAuthority, isMutable: d[o] === 1 };
+  } catch(e){ console.warn("metadata", e); return null; }
+}
+function permissionRows(info, meta){
+  const t22 = info.programId === TOKEN_2022;
+  const ext = name => (info.exts || []).find(e => e.extension === name);
+  const who = a => a ? `<span class="who">Controlled by <span class="mono">${esc(short(a))}</span><span class="adv mono"> · ${esc(a)}</span></span>` : "";
+  const rows = [];
+  const add = (title, key, active, level, means, notMeans, extra = "", raw = "") => rows.push({ title, key, active, level, means, notMeans, extra, raw });
+  add("Mint authority", "mint-authority", !!info.mintAuthority, info.mintAuthority ? 1 : 0,
+    info.mintAuthority ? "More of this token can still be created, which would dilute every holder." : "Supply is fixed. No one can create more of this token.",
+    info.mintAuthority ? "It doesn't mean new tokens will be minted. Some projects keep it for planned rewards." : "", who(info.mintAuthority));
+  add("Freeze authority", "freeze-authority", !!info.freezeAuthority, info.freezeAuthority ? 2 : 0,
+    info.freezeAuthority ? "Your token account can be frozen, so you couldn't send or sell what you hold." : "No one can freeze holders' tokens.",
+    info.freezeAuthority ? "Regulated stablecoins such as USDC keep this for legal reasons. On its own it doesn't prove a scam." : "", who(info.freezeAuthority));
+  if (meta) add("Name, symbol and logo", "metadata", meta.mutable, meta.mutable ? 1 : 0,
+    meta.mutable ? "The token's name, symbol and logo can still be changed." : "The name, symbol and logo are locked.",
+    meta.mutable ? "Many legitimate projects keep this open for rebrands. Watch for a token suddenly renamed to look like another." : "", who(meta.mutable ? meta.authority : null));
+  if (!t22) return { rows, t22 };
+  const pd = ext("permanentDelegate");
+  if (pd) add("Permanent delegate", "permanent-delegate", !!pd.state?.delegate, pd.state?.delegate ? 3 : 0,
+    pd.state?.delegate ? "Tokens can be moved out of or burned from ANY holder's wallet at any time, without permission." : "The permanent delegate was removed.",
+    pd.state?.delegate ? "Some regulated tokens use this for recovery. Even so, it gives the holder full control over your balance." : "", who(pd.state?.delegate), "permanentDelegate");
+  const tf = ext("transferFeeConfig");
+  if (tf){ const f = tf.state?.newerTransferFee || {}, bps = Number(f.transferFeeBasisPoints || 0);
+    add("Transfer fee", "transfer-fee", bps > 0, bps >= 1000 ? 3 : bps > 0 ? 1 : 0,
+      bps > 0 ? `${(bps/100).toFixed(2)}% of every transfer is held back${tf.state?.transferFeeConfigAuthority ? ", and the fee can be changed" : ""}.` : `The fee is set to 0%${tf.state?.transferFeeConfigAuthority ? ", but it can be raised later" : ""}.`,
+      "A fee isn't a scam by itself, but high or adjustable fees can make selling expensive.", who(tf.state?.transferFeeConfigAuthority), "transferFeeConfig"); }
+  const th = ext("transferHook");
+  if (th) add("Transfer hook", "transfer-hook", !!th.state?.programId, th.state?.programId ? 2 : 0,
+    th.state?.programId ? "Every transfer runs a program the creator chose. That program could block sells." : "A hook is configured but no program is set.",
+    "Hooks are also used for royalties and allowlists. Whether it's harmful depends on the program's code.", (th.state?.programId ? `<span class="who">Program <span class="mono">${esc(short(th.state.programId))}</span></span>` : "") + who(th.state?.authority), "transferHook");
+  const ds = ext("defaultAccountState");
+  if (ds){ const frozen = ds.state?.accountState === "frozen";
+    add("Default account state", "default-state", frozen, frozen ? 2 : 0, frozen ? "New holders' accounts start frozen until the issuer unfreezes them." : "New accounts start unfrozen.", frozen ? "Used by some permissioned tokens (for example, ones that require identity checks)." : "", "", "defaultAccountState"); }
+  if (ext("nonTransferable")) add("Non-transferable", "non-transferable", true, 2, "Once received, this token can't be sent or sold.", "Used for badges and credentials, where that's intended.", "", "nonTransferable");
+  const pa = ext("pausableConfig");
+  if (pa) add("Pausable", "pausable", true, pa.state?.paused ? 3 : 2, pa.state?.paused ? "Transfers are paused right now." : "Transfers, mints and burns can be paused at any time.", "Some issuers use it for emergencies.", who(pa.state?.authority), "pausableConfig");
+  const mc = ext("mintCloseAuthority");
+  if (mc?.state?.closeAuthority) add("Close authority", "close-authority", true, 1, "The mint can be closed once supply reaches zero.", "This can't touch tokens people still hold.", who(mc.state.closeAuthority), "mintCloseAuthority");
+  if (ext("confidentialTransferMint")) add("Confidential transfers", "confidential", true, 0, "Balances and transfer amounts can be hidden.", "Privacy features aren't a red flag, but they make activity harder to check.", "", "confidentialTransferMint");
+  if (ext("interestBearingConfig")) add("Interest-bearing", "interest", true, 1, "The balance your wallet shows changes over time at a rate set by an authority.", "The real token amount doesn't change.", who(ext("interestBearingConfig").state?.rateAuthority), "interestBearingConfig");
+  if (ext("scaledUiAmountConfig")) add("Scaled balance", "scaled", true, 1, "An authority can change the multiplier applied to balances shown in wallets.", "The real token amount doesn't change.", who(ext("scaledUiAmountConfig").state?.authority), "scaledUiAmountConfig");
+  return { rows, t22 };
+}
+function renderPermissions(info, meta){
+  const { rows, t22 } = permissionRows(info, meta);
+  const tone = l => ["ok","b1","b2","b3"][l];
+  const label = r => r.active ? (["Info","Caution","Risky","Danger"][r.level]) : "Off";
+  return `<div class="perm">
+    <div class="perm-head"><h3>Permissions</h3><span class="note" style="margin:0">${t22 ? "Token-2022 token: extensions checked" : "Standard SPL token: Token-2022 extensions such as permanent delegates aren't possible"}</span></div>
+    ${rows.map(r => `<div class="perm-row ${r.active && r.level ? "on" : ""}">
+      <div class="perm-top"><span class="perm-t">${term(r.title, r.key)}${r.raw ? `<span class="adv mono"> · ${esc(r.raw)}</span>` : ""}</span>
+        <span class="badge ${r.active && r.level ? tone(r.level) : "b0"}">${label(r)}</span></div>
+      <p class="perm-m">${esc(r.means)}</p>
+      ${r.notMeans ? `<p class="perm-n"><b>What this doesn't mean:</b> ${esc(r.notMeans)}</p>` : ""}
+      ${r.extra ? `<div class="perm-x">${r.extra}</div>` : ""}
+    </div>`).join("")}
+  </div>`;
+}
+
+/* =============== ADDRESS IDENTITY CHECKER =============== */
+const KNOWN_PROGRAMS = {
+  [SYSTEM_PROGRAM_ID]: "System Program", [TOKEN_PROGRAM]: "SPL Token Program", [TOKEN_2022]: "Token-2022 Program",
+  "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL": "Associated Token Account Program",
+  "ComputeBudget111111111111111111111111111111": "Compute Budget Program", "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr": "Memo Program",
+  "Stake11111111111111111111111111111111111111": "Stake Program", "Vote111111111111111111111111111111111111111": "Vote Program",
+  [MPL_METADATA]: "Metaplex Token Metadata", "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4": "Jupiter Aggregator v6",
+  "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8": "Raydium AMM v4", "CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK": "Raydium CLMM",
+  "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C": "Raydium CPMM", "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc": "Orca Whirlpools",
+  "LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo": "Meteora DLMM", "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P": "Pump.fun",
+  "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA": "PumpSwap", "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf": "Squads Multisig v4",
+  "BPFLoaderUpgradeab1e11111111111111111111111": "BPF Upgradeable Loader"
+};
+const progName = a => KNOWN_PROGRAMS[a] || null;
+async function identifyAddress(v){
+  const pk = new PublicKey(v), a = pk.toBase58(), c = conn();
+  const onCurve = PublicKey.isOnCurve(pk.toBytes());
+  const acc = (await c.getParsedAccountInfo(pk)).value;
+  const r = { addr: a, details: [], actions: [] };
+  const lam = acc ? acc.lamports : 0;
+  r.details.push(["SOL balance", `${(lam / LAMPORTS_PER_SOL).toLocaleString(undefined,{maximumFractionDigits:6})} SOL`]);
+  if (!acc){
+    let used = false; try { used = (await c.getSignaturesForAddress(pk, { limit: 1 })).length > 0; } catch {}
+    if (onCurve) Object.assign(r, { kind:"wallet-empty", title:"Wallet address (empty)", level: used ? 0 : 1,
+      summary: used ? "A normal wallet address that currently holds no SOL. It has been used before." : "A valid wallet address with no SOL and no history. It has never been used.",
+      advice: used ? "Safe to receive SOL and tokens." : "Funds sent here arrive normally, but an unused address is a common sign of a typo or a swapped address. Double-check every character before you send." });
+    else Object.assign(r, { kind:"pda-empty", title:"Program-controlled address (not created yet)", level:2, gloss:"pda",
+      summary: "No private key exists for this address and nothing has been created at it yet.",
+      advice: "Don't send funds here unless an app you trust told you to. Anything sent may be unrecoverable." });
+    if (onCurve) r.actions.push(["Scan this wallet", "scan"]);
+    return r;
+  }
+  const owner = acc.owner.toBase58(), parsed = acc.data?.parsed, type = parsed?.type, info = parsed?.info;
+  r.details.push(["Owned by", `${esc(progName(owner) || short(owner))}<span class="adv mono"> · ${esc(owner)}</span>`]);
+  if (acc.executable){
+    Object.assign(r, { kind:"program", title: progName(a) ? `Program: ${progName(a)}` : "Program (smart contract)", level:2, gloss:"program",
+      summary: progName(a) ? `This is the ${progName(a)} program.` : "This is a program. Programs run code on Solana; they are not wallets.",
+      advice: "Never send SOL or tokens directly to a program address. They can be lost permanently." });
+    return r;
+  }
+  if ((owner === TOKEN_PROGRAM || owner === TOKEN_2022) && type === "mint"){
+    const mk = (await fetchMarkets([a]))[a];
+    Object.assign(r, { kind:"mint", title: `Token mint${mk ? `: ${mk.symbol}` : TRUSTED[a] ? `: ${TRUSTED[a]}` : ""}`, level:2, gloss:"mint",
+      summary: "This is a token's ID, not a wallet. It defines the token but doesn't hold anyone's balance.",
+      advice: "Don't send SOL or tokens to this address. To buy or hold this token, use your own wallet address." });
+    r.details.push(["Supply", Number(info?.supply || 0) / 10 ** (info?.decimals || 0) > 0 ? (Number(info.supply) / 10 ** info.decimals).toLocaleString() : "0"]);
+    r.actions.push(["Check this token", "check"]);
+    return r;
+  }
+  if ((owner === TOKEN_PROGRAM || owner === TOKEN_2022) && type === "account"){
+    const ata = spl.getAssociatedTokenAddressSync(new PublicKey(info.mint), new PublicKey(info.owner), true, acc.owner).equals(pk);
+    const sym = (await fetchMarkets([info.mint]))[info.mint]?.symbol || TRUSTED[info.mint] || short(info.mint);
+    Object.assign(r, { kind:"token-account", title: ata ? "Token account (the wallet's standard one)" : "Token account", level:1, gloss: ata ? "ata" : "token-account", owner: info.owner, mint: info.mint,
+      summary: `Holds ${sym} for the wallet ${short(info.owner)}. It's not a wallet itself.`,
+      advice: `To send ${sym}, send to the owner wallet ${short(info.owner)} instead; wallets route tokens to the right account. Never send SOL or a different token here.` });
+    r.details.push(["Owner wallet", `<span class="mono">${esc(short(info.owner))}</span><span class="adv mono"> · ${esc(info.owner)}</span>`], ["Token", esc(sym)], ["Balance", esc(info.tokenAmount?.uiAmountString || "0")]);
+    if (info.state === "frozen") r.details.push(["State", "Frozen"]);
+    if (info.delegate) r.details.push(["Approval", `Delegate ${esc(short(info.delegate))} can move up to ${esc(info.delegatedAmount?.uiAmountString || "?")}`]);
+    r.actions.push(["Scan owner wallet", "scan-owner"], ["Check the token", "check-mint"]);
+    return r;
+  }
+  if (owner === SYSTEM_PROGRAM_ID){
+    if (type === "nonce" || type === "initialized") return Object.assign(r, { kind:"nonce", title:"Durable nonce account", level:1, summary:"A special account used to sign transactions in advance.", advice:"Not a wallet. Don't send funds here." });
+    if (onCurve){
+      Object.assign(r, { kind:"wallet", title:"Regular wallet", level:0, summary:"A normal wallet controlled by a private key.", advice:"Safe to receive SOL and tokens." });
+      r.actions.push(["Scan this wallet", "scan"], ["Map connections", "graph"], ["Add to watchlist", "watch"]);
+    } else Object.assign(r, { kind:"pda", title:"Program-controlled address (PDA)", level:2, gloss:"pda", summary:"No private key exists for this address. Only a program can move funds out of it.", advice:"Don't send funds here unless an app you trust told you to." });
+    return r;
+  }
+  if (owner === "Stake11111111111111111111111111111111111111") return Object.assign(r, { kind:"stake", title:"Stake account", level:1, summary:"Holds staked SOL delegated to a validator.", advice:"Not a wallet. Send to the stake account's owner wallet instead." });
+  if (owner === "Vote111111111111111111111111111111111111111") return Object.assign(r, { kind:"vote", title:"Validator vote account", level:1, summary:"Used by a validator to vote on blocks.", advice:"Not a wallet. Don't send funds here." });
+  return Object.assign(r, { kind:"data", title: `App data account${progName(owner) ? ` (${progName(owner)})` : ""}`, level:2,
+    summary: `Stores data for ${progName(owner) || "a program"}. It's not a wallet.`, advice: "Don't send funds here. Anything sent may be unrecoverable." });
+}
+function renderIdentity(r){
+  const tone = ["ok","b1","b3"][r.level], icon = ["Looks fine to receive","Check before sending","Don't send funds here"][r.level];
+  return `<div class="idcard lvl${r.level}">
+    <div class="perm-top"><h3 style="margin:0">${r.gloss ? term(r.title, r.gloss) : esc(r.title)}</h3><span class="badge ${tone === "ok" ? "b0" : tone}">${icon}</span></div>
+    <div class="mono" style="margin-top:4px">${esc(r.addr)}</div>
+    <p class="perm-m" style="margin-top:12px">${esc(r.summary)}</p>
+    <p class="perm-n"><b>Sending to it:</b> ${esc(r.advice)}</p>
+    <div class="report">${r.details.map(([k,v]) => `<div class="card"><div class="k">${esc(k)}</div><div class="v" style="font-size:15px">${v}</div></div>`).join("")}</div>
+    ${r.actions.length ? `<div class="row" style="margin-top:14px">${r.actions.map(([l, act]) => `<button class="secondary small" style="flex:0 0 auto" data-idact="${act}">${esc(l)}</button>`).join("")}</div>` : ""}
+    ${whyBlock(["Account type, owner program and balance from the Solana network", "Whether the address can have a private key (on or off the ed25519 curve)", "Token names from DexScreener where relevant"],
+      ["Who controls the address or whether they're trustworthy", "Whether an address was swapped by malware on your device. Always compare the first and last characters"])}
+  </div>`;
+}
+let lastIdentity = null;
+$("idBtn").onclick = async () => {
+  const v = $("idAddr").value.trim();
+  try { new PublicKey(v); } catch { $("idOut").innerHTML = `<p class="status err">That isn't a valid Solana address.</p>`; return; }
+  if (needsRpc()){ rpcNotice(); return; }
+  $("idBtn").disabled = true; $("idOut").innerHTML = `<p class="mono">Checking…</p>`;
+  try { lastIdentity = await identifyAddress(v); $("idOut").innerHTML = renderIdentity(lastIdentity); }
+  catch(e){ $("idOut").innerHTML = `<p class="status err">Couldn't check that address: ${esc(e.message||e)}</p>`; }
+  finally { $("idBtn").disabled = false; }
+};
+$("idAddr").addEventListener("keydown", e => { if (e.key === "Enter") $("idBtn").click(); });
+$("idOut").addEventListener("click", e => {
+  const b = e.target.closest("[data-idact]"); if (!b || !lastIdentity) return;
+  const r = lastIdentity, act = b.dataset.idact;
+  if (act === "scan"){ $("addrInput").value = r.addr; showTab("dashboard"); scan(); }
+  if (act === "scan-owner"){ $("addrInput").value = r.owner; showTab("dashboard"); scan(); }
+  if (act === "check"){ $("mintInput").value = r.addr; showTab("check"); $("checkBtn").click(); }
+  if (act === "check-mint"){ $("mintInput").value = r.mint; showTab("check"); $("checkBtn").click(); }
+  if (act === "graph"){ $("graphAddr").value = r.addr; showTab("graph"); $("graphBtn").click(); }
+  if (act === "watch"){ $("watchAddr").value = r.addr; showTab("watch"); }
+  window.scrollTo({ top:0, behavior:"smooth" });
+});
+$("modeSel").onchange = () => { store.set("ontrace_mode", $("modeSel").value); applyMode(); };
+applyMode();
+
 /* =============== DASHBOARD =============== */
 function healthParts(tokens, empties, delegs){
   return [
@@ -1362,7 +1590,7 @@ $("dReclaimBtn").onclick = () => $("reclaimBtn").click();
 $("dRescan").onclick = () => scan();
 
 /* =============== NAVIGATION =============== */
-const TAB_LABELS = { dashboard:"Dashboard", scan:"Wallet scan & cleanup", check:"Token checker", inspect:"Transaction inspector", dev:"Dev tracker", graph:"Wallet graph", watch:"Watchlist & alerts", trending:"Trending", swap:"Swap", send:"Multi-send", create:"Create token", settings:"Settings" };
+const TAB_LABELS = { dashboard:"Dashboard", scan:"Wallet scan & cleanup", check:"Token checker", address:"Address checker", inspect:"Transaction inspector", dev:"Dev tracker", graph:"Wallet graph", watch:"Watchlist & alerts", trending:"Trending", swap:"Swap", send:"Multi-send", create:"Create token", settings:"Settings" };
 const TABS = Object.keys(TAB_LABELS);
 function closeMenu(){ $("side").classList.remove("open"); $("backdrop").classList.remove("show"); $("menuBtn").setAttribute("aria-expanded","false"); }
 function showHome(){
@@ -1397,15 +1625,12 @@ $("gsearch").addEventListener("submit", async e => {
   e.preventDefault();
   const v = $("gq").value.trim(); if (!v) return;
   if (/^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(v)){ $("inspIn").value = v; showTab("inspect"); $("inspBtn").click(); return; }
-  let pk; try { pk = new PublicKey(v); } catch { status("That isn't a valid Solana address or transaction signature.", "err"); return; }
+  try { new PublicKey(v); } catch { status("That isn't a valid Solana address or transaction signature.", "err"); return; }
   if (needsRpc()){ rpcNotice(); return; }
-  try {
-    const info = await conn().getAccountInfo(pk);
-    const own = info?.owner?.toBase58();
-    const len = info?.data?.length || 0, isMint = len === 82 || (own === TOKEN_2022 && len > 165 && info.data[165] === 1);
-    if ((own === TOKEN_PROGRAM || own === TOKEN_2022) && isMint){ $("mintInput").value = v; showTab("check"); $("checkBtn").click(); return; }
-  } catch {}
-  $("addrInput").value = v; showTab("dashboard"); scan();
+  let r = null; try { r = await identifyAddress(v); } catch {}
+  if (r?.kind === "mint"){ $("mintInput").value = v; showTab("check"); $("checkBtn").click(); return; }
+  if (!r || r.kind === "wallet" || (r.kind === "wallet-empty" && r.level === 0)){ $("addrInput").value = v; showTab("dashboard"); scan(); return; }
+  lastIdentity = r; $("idAddr").value = v; showTab("address"); $("idOut").innerHTML = renderIdentity(r);
 });
 function showRpc(){
   $("rpcInput").value = store.get("ontrace_rpc_"+net()) || "";
