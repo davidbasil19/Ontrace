@@ -2,6 +2,11 @@
 
 All notable changes to OnTrace are listed here.
 
+## [1.5.1] — 2026-11-19
+
+### Fixed
+- The landing page and app screens now appear immediately, before the app script finishes downloading. On slow mobile connections the page could stay blank while it loaded.
+
 ## [1.5.0] — 2026-11-19
 
 ### Added
