@@ -127,7 +127,7 @@ async function connectWith(w){
     refreshPickers();
     // If a scan is already on screen, re-run it for the connected wallet so cleanup buttons unlock
     const typed = $("addrInput").value.trim();
-    if (!$("results").classList.contains("hidden") && (!typed || typed === state.owner.toBase58())){ $("addrInput").value = ""; scan(); }
+    if ($("results").classList.contains("hidden") || !typed || typed === state.owner.toBase58()){ $("addrInput").value = ""; scan(); }
   } catch(e){ status("Connection cancelled or failed: " + esc(e.message||e), "err"); }
 }
 async function disconnect(){
@@ -477,6 +477,7 @@ function render(owner, lamports, solPrice){
     }).join("");
   updateBurnInfo();
   $("burnBtn").disabled = !canAct;
+  renderDash(owner, lamports, solPrice, canAct, total, score, reclaimLamports);
   if (!canAct) status(state.owner
     ? `Read-only scan of ${esc(short(owner.toBase58()))}. You're connected as ${esc(short(state.owner.toBase58()))} — to clean up your own wallet, clear the address box and press Scan.`
     : "Read-only scan. Connect this wallet to clean it up.", "");
@@ -791,6 +792,7 @@ $("checkBtn").onclick = async () => {
     const [markets, infos] = await Promise.all([fetchMarkets([m]), fetchMintInfo(conn(), [m])]);
     if (!infos[m]){ $("checkOut").innerHTML = `<p class="status err">That address isn't a token mint on this network.</p>`; return; }
     const mk = markets[m], info = infos[m], r = assess(m, mk, info);
+    saveCheck({ m, name: mk?.name || TRUSTED[m] || "Unknown token", sym: mk?.symbol || "", level: r.level, at: Date.now() });
     $("checkOut").innerHTML = `
       <div style="margin-top:14px"><span class="tokname" style="font-size:18px">${esc(mk?.name || TRUSTED[m] || "Unknown token")}</span>
         ${mk?.symbol?`<span class="mono">$${esc(mk.symbol)}</span>`:""} &nbsp;${badge(r)}</div>
@@ -1295,17 +1297,115 @@ $("graphBtn").onclick = async () => {
   finally { $("graphBtn").disabled = false; }
 };
 
-/* =============== TABS & SETTINGS =============== */
-const TABS = ["scan","swap","send","create","check","trending","watch","dev","graph","inspect","settings"];
+/* =============== DASHBOARD =============== */
+function healthParts(tokens, empties, delegs){
+  return [
+    ["Open approvals", Math.min(15, delegs.length * 5), "#FF3BD4"],
+    ["Likely-scam tokens", Math.min(40, tokens.filter(t=>t.risk.level===3).length * 8), "#ef4444"],
+    ["High-risk tokens", Math.min(20, tokens.filter(t=>t.risk.level===2).length * 4), "#f97316"],
+    ["Empty accounts", Math.min(20, empties.length * 2), "#B6FF3B"],
+    ["Dust tokens", Math.min(10, tokens.filter(t=>t.isDust).length), "#9a9a9a"]
+  ];
+}
+function renderDash(owner, lamports, solPrice, canAct, total, score, reclaimLamports){
+  const { tokens, empties, delegs } = state;
+  $("dashEmpty").classList.add("hidden"); $("dashBody").classList.remove("hidden");
+  const color = score >= 80 ? "#B6FF3B" : score >= 50 ? "#f5b84b" : "#ef4444";
+  $("dRingArc").setAttribute("stroke", color);
+  $("dRingArc").setAttribute("stroke-dasharray", `${(score/100*339.3).toFixed(1)} 340`);
+  $("dScore").textContent = score; $("dRing").setAttribute("aria-label", `Health score ${score} out of 100`);
+  const lab = score >= 80 ? ["Good","b0"] : score >= 50 ? ["Fair","b1"] : ["Needs attention","b3"];
+  $("dLabel").textContent = lab[0]; $("dLabel").className = "badge " + lab[1];
+  const parts = healthParts(tokens, empties, delegs), issues = parts.filter(p => p[1] > 0);
+  $("dFix").textContent = issues.length ? `${issues.length} thing${issues.length>1?"s":""} to fix. Clean them up to raise your score.` : "Nothing to fix right now. Nice and clean.";
+  $("dMode").textContent = canAct ? "Your wallet" : "Read-only";
+  $("dPort").textContent = solPrice ? usd(total) : "–";
+  $("dAppr").textContent = delegs.length; $("dAppr").style.color = delegs.length ? "var(--accent2)" : "";
+  const risky = tokens.filter(t=>t.risk.level>=2).length;
+  $("dRisky").textContent = risky; $("dRisky").style.color = risky ? "#f97316" : "";
+  $("dEmpty").textContent = empties.length;
+  $("dReclaim").textContent = sol(reclaimLamports);
+  $("dReclaimTxt").textContent = empties.length
+    ? `Locked as rent in ${empties.length} empty token account${empties.length>1?"s":""}. Close them and it comes back to you.` + (canAct ? "" : state.owner ? " Scan your connected wallet to reclaim." : " Connect this wallet to reclaim.")
+    : "No empty accounts. Nothing to reclaim.";
+  $("dReclaimBtn").disabled = !empties.length || !canAct;
+  const max = Math.max(1, ...parts.map(p => p[1]));
+  $("dBars").innerHTML = issues.length ? parts.map(([name, n, c]) => `<div class="bar"><span>${esc(name)}</span><div class="t"><i style="width:${n ? Math.max(4, n/max*100) : 0}%;background:${c}"></i></div><span class="n" style="color:${n ? c : "var(--muted)"}">${n ? "−" + n : "0"}</span></div>`).join("")
+    : `<p class="txt">Nothing is lowering your score. Keep it that way by checking tokens before you buy.</p>`;
+  const worst = tokens.filter(t => t.risk.level >= 1).slice(0, 4);
+  $("dRiskList").innerHTML = worst.length ? worst.map(t => `<a href="#" class="lrow" data-checkmint="${esc(t.mint)}"><div style="min-width:0"><div class="nm">${esc(t.symbol || t.name)}</div><div class="sub">${esc(t.risk.reasons[0] || "")}</div></div>${badge(t.risk)}</a>`).join("")
+    : `<p class="txt">No risky tokens found in this wallet.</p>`;
+  $("dAddr").textContent = short(owner.toBase58());
+  const solUi = lamports / LAMPORTS_PER_SOL;
+  $("dTags").innerHTML = [canAct ? `Connected · ${state.wallet || "wallet"}` : "Read-only scan", `${solUi.toFixed(3)} SOL`, `${tokens.length} token${tokens.length===1?"":"s"}`].map(t => `<span>${esc(t)}</span>`).join("");
+  const slices = [{ name:"SOL", v: solUi * solPrice }, ...tokens.filter(t => t.risk.level < 3 && t.value > 0).map(t => ({ name: t.symbol || t.name, v: t.value }))].filter(x => x.v > 0).sort((a,b) => b.v - a.v);
+  const top = slices.slice(0, 3), rest = slices.slice(3).reduce((a,x) => a + x.v, 0); if (rest > 0) top.push({ name:"Other", v: rest });
+  const sum = top.reduce((a,x) => a + x.v, 0), COLS = ["#B6FF3B","#F2F2F2","#FF3BD4","#555"];
+  $("dComp").innerHTML = sum ? top.map((x,i) => `<div style="width:${(x.v/sum*100).toFixed(1)}%;background:${COLS[i]}"></div>`).join("") : "";
+  $("dLegend").innerHTML = sum ? top.map((x,i) => `<span><i style="background:${COLS[i]}"></i>${esc(x.name)} ${Math.round(x.v/sum*100)}%</span>`).join("") : `<span>No priced holdings yet</span>`;
+}
+function resetDash(){ $("dashBody").classList.add("hidden"); $("dashEmpty").classList.remove("hidden"); }
+const checks = { list(){ try { return JSON.parse(store.get("ontrace_checks") || "[]"); } catch { return []; } } };
+function saveCheck(c){
+  const l = checks.list().filter(x => x.m !== c.m); l.unshift(c);
+  store.set("ontrace_checks", JSON.stringify(l.slice(0, 6))); renderChecks();
+}
+function renderChecks(){
+  const l = checks.list();
+  $("dChecks").innerHTML = l.length ? l.slice(0, 4).map(c => `<a href="#" class="lrow" data-checkmint="${esc(c.m)}"><div style="min-width:0"><div class="nm">${esc(c.sym || c.name)}</div><div class="sub">${esc(short(c.m))} · ${esc(ageStr(c.at))} ago</div></div>${badge({ level: Math.min(3, Math.max(0, +c.level || 0)) })}</a>`).join("")
+    : `<p class="txt">No checks yet. Paste a token in the search bar to check it before you buy.</p>`;
+}
+$("dashConnect").onclick = () => connect();
+$("dashScan").onclick = () => { const v = $("dashAddr").value.trim(); if (!v){ if (state.owner) scan(); else connect(); return; } $("addrInput").value = v; scan(); };
+$("dashAddr").addEventListener("keydown", e => { if (e.key === "Enter") $("dashScan").click(); });
+$("dReclaimBtn").onclick = () => $("reclaimBtn").click();
+$("dRescan").onclick = () => scan();
+
+/* =============== NAVIGATION =============== */
+const TAB_LABELS = { dashboard:"Dashboard", scan:"Wallet scan & cleanup", check:"Token checker", inspect:"Transaction inspector", dev:"Dev tracker", graph:"Wallet graph", watch:"Watchlist & alerts", trending:"Trending", swap:"Swap", send:"Multi-send", create:"Create token", settings:"Settings" };
+const TABS = Object.keys(TAB_LABELS);
+function closeMenu(){ $("side").classList.remove("open"); $("backdrop").classList.remove("show"); $("menuBtn").setAttribute("aria-expanded","false"); }
+function showHome(){
+  $("app").classList.add("hidden"); $("landing").classList.remove("hidden");
+  document.title = "OnTrace — the Solana toolbox";
+  if (location.hash && !["#features","#how"].includes(location.hash)) history.replaceState(null, "", location.pathname);
+}
 function showTab(name){
-  document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("active", x.dataset.tab===name));
-  TABS.forEach(t => $("tab-"+t).classList.toggle("hidden", t!==name));
+  if (name === "overview" || name === "home") name = "";
+  if (!name || name === "features" || name === "how"){ showHome(); return; }
+  if (!TABS.includes(name)) name = "dashboard";
+  $("landing").classList.add("hidden"); $("app").classList.remove("hidden");
+  document.querySelectorAll(".side-nav [data-tab]").forEach(b => { const on = b.dataset.tab === name; b.classList.toggle("active", on); on ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"); });
+  $("pageTitle").textContent = TAB_LABELS[name];
+  document.title = `${TAB_LABELS[name]} · OnTrace`;
+  TABS.forEach(t => $("tab-"+t).classList.toggle("hidden", t !== name));
+  if (location.hash.slice(1) !== name) history.replaceState(null, "", "#" + name);
+  closeMenu();
   if (name === "trending" && !state.trend.length) loadTrending();
   if (name === "create") estimateCreate();
   if (name === "watch") refreshWatch();
   if ((name === "swap" || name === "send") && state.owner && !state.holdings) refreshPickers();
 }
-document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+const goTop = () => window.scrollTo({ top:0, behavior:"smooth" });
+document.querySelectorAll(".side-nav [data-tab]").forEach(b => b.onclick = () => { showTab(b.dataset.tab); goTop(); });
+$("menuBtn").onclick = () => { const open = !$("side").classList.contains("open"); $("side").classList.toggle("open", open); $("backdrop").classList.toggle("show", open); $("menuBtn").setAttribute("aria-expanded", String(open)); };
+$("backdrop").onclick = closeMenu;
+document.querySelectorAll("[data-home]").forEach(a => a.onclick = e => { e.preventDefault(); showHome(); goTop(); });
+/* one search box for everything: a signature opens the inspector, a mint opens the checker, anything else is scanned as a wallet */
+$("gsearch").addEventListener("submit", async e => {
+  e.preventDefault();
+  const v = $("gq").value.trim(); if (!v) return;
+  if (/^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(v)){ $("inspIn").value = v; showTab("inspect"); $("inspBtn").click(); return; }
+  let pk; try { pk = new PublicKey(v); } catch { status("That isn't a valid Solana address or transaction signature.", "err"); return; }
+  if (needsRpc()){ rpcNotice(); return; }
+  try {
+    const info = await conn().getAccountInfo(pk);
+    const own = info?.owner?.toBase58();
+    const len = info?.data?.length || 0, isMint = len === 82 || (own === TOKEN_2022 && len > 165 && info.data[165] === 1);
+    if ((own === TOKEN_PROGRAM || own === TOKEN_2022) && isMint){ $("mintInput").value = v; showTab("check"); $("checkBtn").click(); return; }
+  } catch {}
+  $("addrInput").value = v; showTab("dashboard"); scan();
+});
 function showRpc(){
   $("rpcInput").value = store.get("ontrace_rpc_"+net()) || "";
   $("rpcNow").textContent = "Using: " + rpcUrl().replace(/api-key=[^&]+/,"api-key=•••");
@@ -1319,21 +1419,18 @@ $("rpcSave").onclick = () => {
   store.set("ontrace_rpc_"+net(), v); showRpc(); state.holdings = null;
   if (needsRpc()) rpcNotice(); else { status("RPC saved for this network.", "ok"); refreshPickers(); }
 };
-$("network").onchange = () => { showRpc(); $("results").classList.add("hidden"); state.holdings = null; clearStatus(); rpcNotice(); refreshPickers(); };
+$("network").onchange = () => { showRpc(); $("results").classList.add("hidden"); resetDash(); state.holdings = null; clearStatus(); rpcNotice(); refreshPickers(); };
 $("connectBtn").onclick = connect;
 $("disconnectBtn").onclick = disconnect;
 $("scanBtn").onclick = scan;
 $("addrInput").addEventListener("keydown", e => { if (e.key === "Enter") scan(); });
 $("mintInput").addEventListener("keydown", e => { if (e.key === "Enter") $("checkBtn").click(); });
-/* intro */
-function setIntro(show){ $("intro").classList.toggle("hidden", !show); store.set("ontrace_intro_hidden", show ? "" : "1"); }
-if (store.get("ontrace_intro_hidden") === "1") $("intro").classList.add("hidden");
-$("introHide").onclick = () => setIntro(false);
-$("introShow").onclick = () => { setIntro(true); window.scrollTo({ top:0, behavior:"smooth" }); };
-$("introScan").onclick = () => { showTab("scan"); if (!state.owner) connect(); else scan(); $("tab-scan").scrollIntoView({ behavior:"smooth", block:"start" }); };
-document.querySelectorAll("[data-go]").forEach(f => f.onclick = () => { showTab(f.dataset.go); document.querySelector(".tabs").scrollIntoView({ behavior:"smooth", block:"start" }); });
-/* open a tab from the URL hash, e.g. ontrace.space/#swap */
-const hashTab = location.hash.slice(1);
-if (TABS.includes(hashTab)) showTab(hashTab);
+/* landing */
+$("introScan").onclick = () => { showTab("dashboard"); goTop(); if (!state.owner) connect(); else scan(); };
+document.querySelectorAll("[data-go]").forEach(f => f.onclick = () => { showTab(f.dataset.go); goTop(); });
+/* open a tool from the URL hash, e.g. ontrace.space/#swap */
+showTab(location.hash.slice(1));
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (h === "features" || h === "how"){ showHome(); return; } showTab(h); });
+renderChecks();
 showRpc(); fillTokenSelects(); rpcNotice();
 $("connectBtn").disabled = false; $("connectBtn").textContent = "Connect wallet";

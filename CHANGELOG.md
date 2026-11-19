@@ -2,6 +2,20 @@
 
 All notable changes to OnTrace are listed here.
 
+## [1.5.0] — 2026-11-19
+
+### Added
+- **Landing page:** ontrace.space now opens on a landing page (hero, the three toolkits, how it works, safety, call to action). "Launch app" opens the app.
+- **Dashboard:** the app opens on a wallet dashboard showing health score, what's lowering it, portfolio value, open approvals, risky tokens, SOL to reclaim (with a one-click reclaim), riskiest tokens, recent token checks and a holdings breakdown. Scanning is read-only and never asks for a signature.
+- **One search bar:** paste a wallet, token or transaction signature at the top of any page. Signatures open the transaction inspector, token mints open the token checker, and anything else is scanned as a wallet.
+- **Recent checks:** the last tokens you checked are remembered in this browser and shown on the dashboard.
+
+### Changed
+- **Sidebar navigation:** every tool is in a left sidebar grouped into Overview, Security, Investigate and Tools, with Settings and Docs at the bottom. On phones the sidebar opens from a menu button.
+- **New mark:** a lime trace line ending in a magenta dot, used in the app and landing page header.
+- Connecting a wallet now scans it automatically.
+- Tool links still work by URL, e.g. `ontrace.space/#swap` or `ontrace.space/#check`.
+
 ## [1.4.0] — 2026-11-19
 
 ### Changed

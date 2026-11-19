@@ -67,13 +67,21 @@ Everything runs **in your browser**. There is no OnTrace server, no account, no 
 
 | Page | URL |
 |---|---|
-| App | https://ontrace.space |
+| Landing page | https://ontrace.space |
+| App (dashboard) | https://ontrace.space/#dashboard |
 | Documentation | https://ontrace.space/docs.html |
 | FAQ | https://ontrace.space/faq.html |
 | Security | https://ontrace.space/security.html |
 | Terms & Privacy | https://ontrace.space/terms.html |
 
 Tools can be linked directly with a hash, e.g. `https://ontrace.space/#swap`, `#check`, `#trending`, `#inspect`.
+
+### Layout
+
+- **Landing page** — what OnTrace does, how it works and how it keeps you safe. "Launch app" opens the app.
+- **Sidebar** — every tool in one place, grouped into **Overview** (Dashboard), **Security** (Wallet scan & cleanup, Token checker), **Investigate** (Tx inspector, Dev tracker, Wallet graph, Watchlist & alerts, Trending) and **Tools** (Swap, Multi-send, Create token), plus Settings and Docs. On phones it opens from the menu button.
+- **Search bar** — paste a wallet, token or transaction signature on any page; OnTrace opens the right tool.
+- **Dashboard** — health score and what's lowering it, portfolio value, open approvals, risky tokens, SOL to reclaim, riskiest tokens, recent checks and a holdings breakdown. Filled by a read-only scan of the connected wallet (or any pasted address).
 
 ## Why it exists
 
