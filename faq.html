@@ -48,13 +48,31 @@
   footer{color:var(--muted);font-size:13px;text-align:center;padding:30px 0 40px;border-top:1px solid var(--line);margin-top:40px}
   footer a{color:var(--muted);margin:0 8px}
   @media (max-width:640px){h1{font-size:23px} .wordmark{font-size:18px}}
+  .docs{display:grid;grid-template-columns:220px 1fr;gap:34px;align-items:start}
+  .side{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--panel)}
+  .side a{display:block;color:var(--muted);text-decoration:none;font-size:13.5px;padding:4px 8px;border-radius:8px}
+  .side a:hover{color:var(--text);background:var(--panel2)}
+  .side-title{font-family:"Orbitron",system-ui,sans-serif;font-size:13px;letter-spacing:1px;color:var(--accent);padding:2px 8px 8px}
+  .side-group{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6b6b6b;padding:12px 8px 4px}
+  .content{min-width:0}
+  .content h2{scroll-margin-top:16px;border-top:1px solid var(--line);padding-top:26px}
+  .content h1{margin-top:0}
+  .tip{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:10px 14px;margin:12px 0;font-size:14.5px;color:#d6d6d6}
+  .tip.warn{border-left-color:var(--accent2)}
+  pre{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;font-size:13px;color:#d6d6d6;margin:10px 0}
+  dl{margin:8px 0} dt{font-weight:700;margin-top:14px;color:var(--text)} dd{margin:3px 0 0 0;color:#cfcfcf}
+  .pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(255,59,212,.15);color:var(--accent2)}
+  .b{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+  .b0{background:rgba(34,197,94,.15);color:#22c55e} .b1{background:rgba(245,184,75,.15);color:#f5b84b} .b2{background:rgba(249,115,22,.16);color:#f97316} .b3{background:rgba(239,68,68,.16);color:#ef4444}
+  ol li,ul li{margin:4px 0}
+  @media (max-width:900px){ .docs{grid-template-columns:1fr} .side{position:static;max-height:none} }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" style="">
   <header>
     <a class="brand" href="./"><img src="logo.png" alt="OnTrace logo" width="44" height="44"><span class="wordmark">ONTRACE</span></a>
-    <a class="cta" href="./">Open the app</a>
+    <div style="display:flex;gap:14px;align-items:center"><a href="docs.html" style="color:var(--muted);text-decoration:none;font-size:14px">Docs</a><a class="cta" href="./">Open the app</a></div>
   </header>
   <main>
 
@@ -96,7 +114,7 @@
 
   </main>
   <footer>
-    <div><a href="./">App</a><a href="faq.html">FAQ</a><a href="security.html">Security</a><a href="terms.html">Terms &amp; Privacy</a><a href="https://github.com/davidbasil19/Ontrace" target="_blank" rel="noopener">GitHub</a></div>
+    <div><a href="./">App</a><a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="security.html">Security</a><a href="terms.html">Terms &amp; Privacy</a><a href="https://github.com/davidbasil19/Ontrace" target="_blank" rel="noopener">GitHub</a></div>
     <div style="margin-top:10px"><a href="https://x.com/0ntrace" target="_blank" rel="noopener">@0ntrace</a> · <a href="mailto:team@ontrace.space">team@ontrace.space</a></div>
     <div style="margin-top:10px">© 2026 OnTrace · ontrace.space</div>
   </footer>

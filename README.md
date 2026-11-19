@@ -67,6 +67,7 @@ Everything runs **in your browser**. There is no OnTrace server, no account, no 
 | Page | URL |
 |---|---|
 | App | https://ontrace.space |
+| Documentation | https://ontrace.space/docs.html |
 | FAQ | https://ontrace.space/faq.html |
 | Security | https://ontrace.space/security.html |
 | Terms & Privacy | https://ontrace.space/terms.html |
@@ -265,6 +266,7 @@ Full details: [docs/RISK-ENGINE.md](docs/RISK-ENGINE.md).
 ```
 ontrace/
 ├── index.html              # The entire app (UI, styles, logic)
+├── docs.html               # Full user documentation
 ├── faq.html                # Frequently asked questions
 ├── security.html           # Plain-English security page
 ├── terms.html              # Terms of use and privacy policy

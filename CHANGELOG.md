@@ -2,6 +2,15 @@
 
 All notable changes to OnTrace are listed here.
 
+## [1.2.0] — 2026-11-19
+
+### Added
+- **Documentation** at `ontrace.space/docs.html`: getting started, connecting on desktop and mobile, networks and settings, Solana basics, step-by-step guides for every tool, risk ratings, health score, safety guide, troubleshooting, glossary and a developer section. Linked from every page.
+
+### Fixed
+- Cleanup buttons now unlock automatically after connecting a wallet (the existing scan re-runs), and the page explains why buttons are locked on read-only scans.
+- Connect button shows "Loading…" until the app is ready, with a warning if loading is very slow.
+
 ## [1.1.0] — 2026-11-19
 
 ### Added
