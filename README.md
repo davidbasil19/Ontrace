@@ -202,6 +202,8 @@ Drainer detection includes:
 | **Minimal instructions** | Cleanup uses only standard Token Program instructions: `CloseAccount` (9), `Burn` (8) and `Revoke` (5). Their encoding was verified byte-for-byte against the official `@solana/spl-token` library. |
 | **Explicit confirmation** | Burns, multi-sends and token creation show a confirmation summary first. Risky swaps need an acknowledgement. |
 | **No backend** | No database, no analytics, no tracking. Watchlists and settings stay in your browser's local storage. |
+| **Transaction guard** | Every transaction is simulated before the wallet opens and blocked if it would hand over accounts, add approvals, move unexpected tokens, short a swap, or overspend SOL. |
+| **No third-party code** | Libraries and fonts are self-hosted; a strict Content Security Policy blocks outside scripts and unknown connections. |
 | **Open source** | This repository *is* the site. What you read here is what runs at ontrace.space. |
 
 See [SECURITY.md](SECURITY.md) for more, including how to report a vulnerability.
@@ -250,13 +252,13 @@ Full details: [docs/RISK-ENGINE.md](docs/RISK-ENGINE.md).
 
 | Layer | Choice |
 |---|---|
-| App | One self-contained `index.html` — HTML, CSS and a JavaScript module. No build step, no framework. |
-| Solana | [`@solana/web3.js`](https://github.com/solana-labs/solana-web3.js) 1.98, [`@solana/spl-token`](https://github.com/solana-labs/solana-program-library) 0.4.9, [`@solana/spl-token-metadata`](https://github.com/solana-labs/solana-program-library) 0.1.6 — loaded as ES modules from [esm.sh](https://esm.sh) |
+| App | `index.html` + `app.js` (ES module) + `boot.js`. No framework, no build step for the app itself. |
+| Solana | [`@solana/web3.js`](https://github.com/solana-labs/solana-web3.js) 1.98, [`@solana/spl-token`](https://github.com/solana-labs/solana-program-library) 0.4.9, [`@solana/spl-token-metadata`](https://github.com/solana-labs/solana-program-library) 0.1.6 — **self-hosted** in `vendor/solana.bundle.js` ([verify](vendor/README.md)) |
 | RPC | Any Solana RPC (Helius recommended). Transaction history is fetched directly over JSON-RPC so Solana's newest (version 1) transactions are supported. |
 | Swaps | [Jupiter Swap API](https://dev.jup.ag) (`lite-api.jup.ag/swap/v1`) |
 | Market data | [DexScreener API](https://docs.dexscreener.com) |
 | Wallets | Phantom, Solflare, Backpack (injected providers) |
-| Font | [Orbitron](https://fonts.google.com/specimen/Orbitron) (Google Fonts) |
+| Font | [Orbitron](https://fonts.google.com/specimen/Orbitron), self-hosted in `fonts/` |
 | Hosting | GitHub Pages with a custom domain |
 
 ---
@@ -265,7 +267,11 @@ Full details: [docs/RISK-ENGINE.md](docs/RISK-ENGINE.md).
 
 ```
 ontrace/
-├── index.html              # The entire app (UI, styles, logic)
+├── index.html              # App page (UI + styles)
+├── app.js                  # App logic (ES module), incl. the transaction guard
+├── boot.js                 # Frame protection + slow-load notice
+├── vendor/                 # Self-hosted Solana library bundle (+ how to rebuild/verify)
+├── fonts/                  # Self-hosted Orbitron font
 ├── docs.html               # Full user documentation
 ├── faq.html                # Frequently asked questions
 ├── security.html           # Plain-English security page
@@ -305,7 +311,7 @@ Open the local URL, pick **Devnet** in the network menu, and connect a wallet se
 
 ## Configuration
 
-All settings live at the top of the `<script type="module">` in `index.html`.
+All settings live at the top of `app.js`.
 
 | Setting | Purpose |
 |---|---|
@@ -367,6 +373,7 @@ Before any major release, run through the app end-to-end on **devnet** with a th
 - ✅ Front page intro, FAQ, Security and Terms & Privacy pages
 
 **Next**
+- ✅ Transaction guard, self-hosted code and Content Security Policy
 - Wallet Standard support (OKX, Coinbase Wallet and more)
 - Optional platform fee on swaps to fund development
 

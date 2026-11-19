@@ -11,19 +11,29 @@ OnTrace is a single static page. All logic runs client-side; there is no backend
  └── DexScreener API ──────────────────────────────── prices, liquidity, trending
 ```
 
-## Code layout inside `index.html`
+## Files
 
-The `<script type="module">` is organised in sections, top to bottom:
+| File | Role |
+|---|---|
+| `index.html` | Markup, styles, Content Security Policy |
+| `boot.js` | Frame protection and slow-load notice (runs first) |
+| `app.js` | All app logic (ES module) |
+| `vendor/solana.bundle.js` | Self-hosted Solana libraries |
+
+## Code layout inside `app.js`
+
+Organised in sections, top to bottom:
 
 | Section | Responsibility |
 |---|---|
-| Imports | `buffer`, `@solana/web3.js`, `@solana/spl-token`, `@solana/spl-token-metadata` from esm.sh |
+| Imports | `Buffer`, `web3`, `spl`, `tmd` from the self-hosted `./vendor/solana.bundle.js` |
 | Constants | `DEFAULT_RPC`, program IDs, `TRUSTED` mints, batch sizes |
 | State & helpers | App state, `localStorage` wrapper, formatting (`usd`, `fromBase`, `toBase`), HTML escaping |
 | Wallets | Provider detection, connect/disconnect |
 | Data | `fetchTokenAccounts`, `fetchMarkets` (DexScreener), `fetchMintInfo`, `loadHoldings` |
 | Risk engine | `assess()` and `healthScore()` — see [RISK-ENGINE.md](RISK-ENGINE.md) |
-| Transactions | `sendTx`, `sendGroups`, raw instruction builders (`closeIx`, `burnIx`, `revokeIx`) |
+| Transaction guard | `guardTransaction()` — allowlist, instruction checks and simulation-based balance/ownership checks before any signature |
+| Transactions | `sendTx` (runs the guard), `sendGroups`, raw instruction builders (`closeIx`, `burnIx`, `revokeIx`) |
 | Portfolio & cleanup | Scan, render, reclaim, burn, revoke, unwrap |
 | Token pickers | Shared token selects for Swap and Multi-send |
 | Swap | Jupiter quote → risk check → swap transaction → sign |
@@ -40,7 +50,9 @@ The `<script type="module">` is organised in sections, top to bottom:
 
 ## Key design decisions
 
-**No build step.** One file is easy to audit, host anywhere, and verify against this repository.
+**No app build step.** The app code is plain JavaScript that runs as-is, so it's easy to audit and verify against this repository. Only the third-party libraries are pre-bundled (reproducibly — see `vendor/README.md`).
+
+**Defence in depth.** The wallet's approval screen is the last line of defence; the transaction guard is the one before it. It treats every transaction — including ones returned by Jupiter — as untrusted until simulation shows it only does what the user asked.
 
 **Raw JSON-RPC for history.** Solana mainnet now carries version-1 transactions, which `@solana/web3.js` 1.x rejects. `rpcGetTx()` calls `getTransaction` directly with `maxSupportedTransactionVersion: 1` and reads the JSON, falling back to version 0 when an endpoint doesn't support it.
 

@@ -13,9 +13,11 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@0ntrace">
 <meta name="theme-color" content="#000000">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <style>
+  @font-face{font-family:"Orbitron";font-weight:600;font-display:swap;src:url(fonts/orbitron-600.woff2) format("woff2")}
+  @font-face{font-family:"Orbitron";font-weight:800;font-display:swap;src:url(fonts/orbitron-800.woff2) format("woff2")}
   :root{--bg:#000;--panel:#0d0d0d;--panel2:#151515;--line:#262626;--text:#f2f2f2;--muted:#9a9a9a;--accent:#b6ff3b;--accent2:#ff3bd4}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -423,6 +425,7 @@ RecipientWalletAddress3</pre>
     <p><span style="color:#22c55e">80+</span> is healthy, <span style="color:#f5b84b">50–79</span> needs attention, <span style="color:#ef4444">under 50</span> needs a clean-up. Reclaiming, burning and revoking raise your score.</p>
 
     <h2 id="safety">Safety guide</h2>
+    <div class="card"><strong>🛡️ Built-in transaction guard.</strong> Every transaction OnTrace builds is checked and simulated <em>before</em> your wallet opens. It's blocked automatically if it would hand ownership of your token accounts to someone else, add a spending approval, move tokens you didn't ask to move, deliver less than your swap quote, spend more SOL than expected, call an unexpected program, or fail on-chain. You'll see "Running safety check…" then "Safety check passed" before your wallet asks you to approve. Details: <a href="security.html">Security</a>.</div>
     <ul>
       <li><strong>Seed phrases are never needed.</strong> OnTrace — and any honest site — will never ask for yours.</li>
       <li><strong>Check the address bar:</strong> the only official site is <strong>ontrace.space</strong>. Bookmark it.</li>
@@ -449,6 +452,8 @@ RecipientWalletAddress3</pre>
       <tr><td>Alerts stopped</td><td>Alerts only run while the tab is open. Re-open OnTrace and press Start alerts.</td></tr>
       <tr><td>Dev tracker can't find the creator</td><td>The token has too much history. Paste the dev wallet manually if known.</td></tr>
       <tr><td>Swaps don't work on devnet</td><td>Expected — swaps are mainnet only.</td></tr>
+      <tr><td>"OnTrace's safety check blocked this transaction"</td><td>The guard found something wrong (the reason is shown). Nothing was signed or sent. If it says the transaction "would fail on-chain", check your balance or try again; for anything else, don't retry — report it to team@ontrace.space.</td></tr>
+      <tr><td>Custom RPC doesn't work</td><td>For security, only known providers are allowed: Helius, QuickNode, Alchemy, Triton (rpcpool), Ankr, PublicNode and Solana's own endpoints.</td></tr>
     </table>
 
     <h2 id="glossary">Glossary</h2>
@@ -460,6 +465,7 @@ RecipientWalletAddress3</pre>
       <dt>Drainer</dt><dd>A malicious transaction or site designed to take your assets once you sign.</dd>
       <dt>Dust</dt><dd>Tiny token balances worth almost nothing.</dd>
       <dt>Jupiter</dt><dd>Solana's main swap aggregator, which finds the best price across exchanges.</dd>
+      <dt>Transaction guard</dt><dd>OnTrace's automatic pre-signing check that simulates each transaction and blocks dangerous ones.</dd>
       <dt>Lamport</dt><dd>The smallest unit of SOL (1 SOL = 1,000,000,000 lamports).</dd>
       <dt>Mint address</dt><dd>A token's unique ID on Solana.</dd>
       <dt>Rent</dt><dd>The refundable SOL deposit every account must hold.</dd>
@@ -473,13 +479,14 @@ RecipientWalletAddress3</pre>
     <p>OnTrace is a single static page — HTML, CSS and a JavaScript module, with no build step and no backend. The full source is on <a href="https://github.com/davidbasil19/Ontrace" target="_blank" rel="noopener">GitHub</a>.</p>
     <table>
       <tr><th>Component</th><th>Used for</th></tr>
-      <tr><td>@solana/web3.js 1.98</td><td>Connections, transactions, simulation</td></tr>
+      <tr><td>@solana/web3.js 1.98 <em>(self-hosted bundle)</em></td><td>Connections, transactions, simulation</td></tr>
       <tr><td>@solana/spl-token 0.4.9</td><td>Token instructions and account decoding</td></tr>
       <tr><td>@solana/spl-token-metadata 0.1.6</td><td>On-chain token metadata</td></tr>
       <tr><td>Solana JSON-RPC (direct)</td><td>Transaction history, including version-1 transactions</td></tr>
       <tr><td>Jupiter Swap API</td><td>Swap quotes and transactions</td></tr>
       <tr><td>DexScreener API</td><td>Prices, liquidity, trending</td></tr>
     </table>
+    <p><strong>Security model:</strong> all libraries are bundled into <code>vendor/solana.bundle.js</code> and served from ontrace.space; a strict Content Security Policy allows scripts only from the site itself and connections only to known RPC providers, Jupiter and DexScreener. Every transaction passes <code>guardTransaction()</code> in <code>app.js</code> before the wallet is asked to sign.</p>
     <p><strong>Run locally:</strong> clone the repo and serve the folder over HTTP (e.g. <code>npx serve .</code>) — wallets don't connect to <code>file://</code> pages. Configuration (RPC, batch sizes, trusted tokens) is at the top of the script in <code>index.html</code>.</p>
     <p>Deeper references in the repo: <a href="https://github.com/davidbasil19/Ontrace/blob/main/docs/ARCHITECTURE.md">Architecture</a> · <a href="https://github.com/davidbasil19/Ontrace/blob/main/docs/RISK-ENGINE.md">Risk engine</a> · <a href="https://github.com/davidbasil19/Ontrace/blob/main/docs/DEPLOYMENT.md">Deployment</a> · <a href="https://github.com/davidbasil19/Ontrace/blob/main/SECURITY.md">Security</a> · <a href="https://github.com/davidbasil19/Ontrace/blob/main/CHANGELOG.md">Changelog</a></p>
 

@@ -33,6 +33,29 @@ The `CloseAccount`, `Burn` and `Revoke` encodings were verified byte-for-byte ag
 
 ## Protections built in
 
+### Transaction guard
+Every transaction OnTrace builds — including swaps returned by Jupiter — passes `guardTransaction()` (in `app.js`) **before the wallet is asked to sign**. It is blocked if:
+
+| Check | Blocked when |
+|---|---|
+| Fee payer | anyone other than the connected wallet would pay |
+| Program allowlist | a top-level instruction calls a program the action doesn't need (base: System, Compute Budget, Token, Token-2022, Associated Token Account; swaps add Jupiter v6) |
+| Dangerous instructions | a Token `Approve` / `ApproveChecked` appears, or `SetAuthority` outside token creation |
+| Simulation | the transaction would fail on-chain |
+| Ownership | any of the user's token accounts would change owner |
+| Approvals | any of the user's token accounts would gain a new delegate |
+| Token outflow | the user's balance of any token would drop beyond what the action allows (multi-send amount, swap input, or burns/unwrap) |
+| Swap output | the user would receive less than the quote's minimum (`otherAmountThreshold`) |
+| SOL spend | the user's SOL would drop by more than the expected amount plus a 0.01 SOL fee allowance |
+
+Tested against live mainnet data: a genuine Jupiter swap and a permitted token send pass; redirected swap output, hidden approvals, unknown programs, SOL drains, token drains and ownership hand-overs are blocked.
+
+### No third-party code
+- All libraries are bundled in `vendor/solana.bundle.js` and fonts in `fonts/`, served from ontrace.space. See [vendor/README.md](vendor/README.md) to rebuild and verify the bundle's SHA-256.
+- **Content Security Policy** (meta tag): `script-src 'self'` — only scripts from ontrace.space run; no inline scripts. `connect-src` allows only Solana RPC providers (Helius, QuickNode, Alchemy, Triton, Ankr, PublicNode, Solana endpoints), Jupiter and DexScreener. `object-src 'none'`, `base-uri 'self'`, `form-action 'none'`. Info pages use `script-src 'none'`.
+- **Frame protection:** `boot.js` refuses to run the app inside another site's frame (anti-clickjacking).
+- **Custom RPC allowlist:** user-supplied RPC URLs must belong to a known provider.
+
 - **Confirmation dialogs** before burns, multi-sends and token creation.
 - **Risk acknowledgement** required before swapping into tokens rated *High risk* or *Likely scam*.
 - **Transaction inspector** flags drainer patterns (token-account ownership hand-over, new approvals, accounts closed to someone else, unknown programs) before you sign.
@@ -50,19 +73,23 @@ The `CloseAccount`, `Burn` and `Revoke` encodings were verified byte-for-byte ag
 
 | Dependency | Source |
 |---|---|
-| `@solana/web3.js` 1.98.0 | esm.sh |
-| `@solana/spl-token` 0.4.9 | esm.sh |
-| `@solana/spl-token-metadata` 0.1.6 | esm.sh |
-| `buffer` 6.0.3 | esm.sh |
-| Jupiter Swap API | lite-api.jup.ag |
-| DexScreener API | api.dexscreener.com |
-| Orbitron font | Google Fonts |
-
-Versions are pinned in the import URLs.
+| `@solana/web3.js` 1.98.0 | self-hosted bundle |
+| `@solana/spl-token` 0.4.9 | self-hosted bundle |
+| `@solana/spl-token-metadata` 0.1.6 | self-hosted bundle |
+| `buffer` 6.0.3 | self-hosted bundle |
+| Orbitron font | self-hosted (`fonts/`) |
+| Jupiter Swap API | lite-api.jup.ag (data only) |
+| DexScreener API | api.dexscreener.com (data only) |
 
 ## RPC key
 
 The site's RPC key is visible in the page source, like any browser-side key. It is restricted to the `ontrace.space` domain in the provider's dashboard so it can't be used elsewhere.
+
+## Recommended account security (maintainers)
+
+- 2FA on GitHub, the domain registrar, Helius, X and the email account
+- Registrar lock and DNSSEC enabled on ontrace.space
+- Helius key restricted to `ontrace.space` and `www.ontrace.space`
 
 ## Reporting a vulnerability
 

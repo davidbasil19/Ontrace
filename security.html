@@ -13,9 +13,11 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@0ntrace">
 <meta name="theme-color" content="#000000">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <style>
+  @font-face{font-family:"Orbitron";font-weight:600;font-display:swap;src:url(fonts/orbitron-600.woff2) format("woff2")}
+  @font-face{font-family:"Orbitron";font-weight:800;font-display:swap;src:url(fonts/orbitron-800.woff2) format("woff2")}
   :root{--bg:#000;--panel:#0d0d0d;--panel2:#151515;--line:#262626;--text:#f2f2f2;--muted:#9a9a9a;--accent:#b6ff3b;--accent2:#ff3bd4}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -115,8 +117,34 @@
       <li><strong>Confirmation step</strong> before burns, multi-sends and token creation.</li>
       <li><strong>Risk acknowledgement</strong> before swapping into tokens rated High risk or Likely scam.</li>
       <li><strong>Drainer detection</strong> in the Transaction inspector: it flags ownership hand-overs, new spending approvals, accounts closed to someone else and unknown programs.</li>
+      <li><strong>Transaction guard</strong>: every transaction is checked and simulated before your wallet opens — see below.</li>
       <li><strong>Safe display</strong>: token names from outside sources are cleaned before showing, so a malicious token name can't inject anything into the page.</li>
       <li><strong>Local-only storage</strong>: your watchlist and settings never leave your browser.</li>
+    </ul>
+
+
+    <h2>The transaction guard</h2>
+    <p>Before your wallet is ever asked to sign, OnTrace checks every transaction it builds — including swaps from Jupiter — and <strong>blocks it automatically</strong> if anything looks wrong:</p>
+    <table>
+      <tr><th>Check</th><th>Blocks the transaction if…</th></tr>
+      <tr><td>Fee payer</td><td>anyone other than your wallet would pay for it</td></tr>
+      <tr><td>Programs</td><td>it calls a program the action doesn't need</td></tr>
+      <tr><td>Dangerous instructions</td><td>it tries to approve a spender or change who controls a token account</td></tr>
+      <tr><td>Live simulation</td><td>it would fail on-chain (so you don't pay a fee for nothing)</td></tr>
+      <tr><td>Ownership</td><td>any of your token accounts would end up owned by someone else</td></tr>
+      <tr><td>Approvals</td><td>someone would gain permission to spend your tokens</td></tr>
+      <tr><td>Token outflow</td><td>tokens would leave your wallet beyond what you asked to send or swap</td></tr>
+      <tr><td>Swap output</td><td>you wouldn't receive at least the minimum amount you were quoted</td></tr>
+      <tr><td>SOL spend</td><td>it would take more SOL than the action should cost</td></tr>
+    </table>
+    <p>If the guard blocks something, you'll see why — and your wallet is never opened. Your wallet's own approval screen is still the final check.</p>
+
+    <h2>No third-party code</h2>
+    <ul>
+      <li><strong>Self-hosted:</strong> every script, library and font is served from ontrace.space itself — nothing is loaded from outside code servers.</li>
+      <li><strong>Content Security Policy:</strong> the browser is told to refuse any script not from ontrace.space, and to block connections to anything except Solana RPC providers, Jupiter and DexScreener.</li>
+      <li><strong>Frame protection:</strong> OnTrace refuses to run inside another website, so it can't be disguised inside a fake page.</li>
+      <li><strong>No inline scripts:</strong> the app's code lives in separate files that the security policy allows; injected code can't run.</li>
     </ul>
 
     <h2>Open source</h2>

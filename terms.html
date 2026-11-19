@@ -13,9 +13,11 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@0ntrace">
 <meta name="theme-color" content="#000000">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <style>
+  @font-face{font-family:"Orbitron";font-weight:600;font-display:swap;src:url(fonts/orbitron-600.woff2) format("woff2")}
+  @font-face{font-family:"Orbitron";font-weight:800;font-display:swap;src:url(fonts/orbitron-800.woff2) format("woff2")}
   :root{--bg:#000;--panel:#0d0d0d;--panel2:#151515;--line:#262626;--text:#f2f2f2;--muted:#9a9a9a;--accent:#b6ff3b;--accent2:#ff3bd4}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}

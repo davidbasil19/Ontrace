@@ -2,6 +2,15 @@
 
 All notable changes to OnTrace are listed here.
 
+## [1.3.0] — 2026-11-19
+
+### Security
+- **Transaction guard:** every transaction is checked and simulated before the wallet opens. Blocks wrong fee payer, unexpected programs, approvals, authority changes, on-chain failures, ownership hand-overs, new delegates, unexpected token outflows, short swap output and excess SOL spend.
+- **No third-party code:** Solana libraries bundled into `vendor/solana.bundle.js`; Orbitron font self-hosted. Google Fonts and esm.sh removed.
+- **Content Security Policy** on every page; app code moved out of inline scripts into `app.js` and `boot.js`.
+- **Frame protection** against clickjacking.
+- **Custom RPC allowlist** for user-supplied RPC URLs.
+
 ## [1.2.0] — 2026-11-19
 
 ### Added
