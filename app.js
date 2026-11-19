@@ -27,7 +27,7 @@ const TRUSTED = {
   "jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v":"JupSOL",
   "bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1":"bSOL"
 };
-const LEVELS = ["Safe","Caution","High risk","Likely scam"];
+const LEVELS = ["No major red flags","Caution","High risk","Likely scam"];
 const BATCH = { close: 20, burn: 9, revoke: 20, sendSol: 18, sendToken: 5 };
 const SOL_RESERVE = 0.01; // SOL kept back for fees when using Max
 
@@ -68,7 +68,7 @@ const explorerAcct = a => `https://solscan.io/token/${a}${net()==="devnet"?"?clu
 function rpcUrl(){ return store.get("ontrace_rpc_"+net()) || DEFAULT_RPC[net()] || clusterApiUrl(net()); }
 function needsRpc(){ return net() === "mainnet-beta" && !store.get("ontrace_rpc_"+net()) && !DEFAULT_RPC[net()]; }
 function rpcNotice(){
-  if (needsRpc()) status('Mainnet needs an RPC endpoint — Solana\'s free public server blocks websites. Get a free key at <a href="https://www.helius.dev" target="_blank" rel="noopener">helius.dev</a> and paste it in <strong>Settings</strong>. (Devnet, Trending and Swap quotes work without one.)', "err");
+  if (needsRpc()) status('This copy of OnTrace has no mainnet RPC configured. Add one from a known provider (e.g. <a href="https://www.helius.dev" target="_blank" rel="noopener">Helius</a>) in <strong>Settings</strong>. (Devnet, Trending and Swap quotes work without one.)', "err");
 }
 function conn(){ return new Connection(rpcUrl(), "confirmed"); }
 function requireWallet(){ if (!state.owner){ status("Connect your wallet first.", "err"); return false; } if (needsRpc()){ rpcNotice(); return false; } return true; }
@@ -227,7 +227,7 @@ function assess(mint, market, mintInfo){
     if (mintInfo.transferHook) bump(1, "Custom transfer hook — transfers run creator code");
     if (mintInfo.transferFee) bump(1, "Charges a fee on every transfer");
   }
-  if (!reasons.length) reasons.push("No red flags found");
+  if (!reasons.length) reasons.push("No automated check found a problem — still do your own research");
   return { level, reasons };
 }
 function healthScore(tokens, empties, delegs){
@@ -1331,7 +1331,7 @@ if (store.get("ontrace_intro_hidden") === "1") $("intro").classList.add("hidden"
 $("introHide").onclick = () => setIntro(false);
 $("introShow").onclick = () => { setIntro(true); window.scrollTo({ top:0, behavior:"smooth" }); };
 $("introScan").onclick = () => { showTab("scan"); if (!state.owner) connect(); else scan(); $("tab-scan").scrollIntoView({ behavior:"smooth", block:"start" }); };
-document.querySelectorAll(".feat[data-go]").forEach(f => f.onclick = () => { showTab(f.dataset.go); document.querySelector(".tabs").scrollIntoView({ behavior:"smooth", block:"start" }); });
+document.querySelectorAll("[data-go]").forEach(f => f.onclick = () => { showTab(f.dataset.go); document.querySelector(".tabs").scrollIntoView({ behavior:"smooth", block:"start" }); });
 /* open a tab from the URL hash, e.g. ontrace.space/#swap */
 const hashTab = location.hash.slice(1);
 if (TABS.includes(hashTab)) showTab(hashTab);

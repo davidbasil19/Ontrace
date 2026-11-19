@@ -91,6 +91,10 @@ The site's RPC key is visible in the page source, like any browser-side key. It 
 - Registrar lock and DNSSEC enabled on ontrace.space
 - Helius key restricted to `ontrace.space` and `www.ontrace.space`
 
+## Audit status
+
+OnTrace **has not yet been independently audited**. The safeguards above were built and tested by the maintainers (including testing the transaction guard against live mainnet data), which is not a substitute for an independent review. Independent reviews will be published here.
+
 ## Reporting a vulnerability
 
 Please report security issues **privately** to **team@ontrace.space** with:

@@ -6,7 +6,7 @@ OnTrace rates tokens with `assess(mint, market, mintInfo)` in `index.html`. Each
 
 | Level | Label | Meaning |
 |---|---|---|
-| 0 | **Safe** | Well-known token, or no red flags found |
+| 0 | **No major red flags** | Well-known token, or no automated check found a problem. Not a guarantee of safety. |
 | 1 | **Caution** | Something worth knowing, not necessarily bad |
 | 2 | **High risk** | Real chance you can't sell or could lose funds |
 | 3 | **Likely scam** | Strong scam pattern |
@@ -32,7 +32,9 @@ OnTrace rates tokens with `assess(mint, market, mintInfo)` in `index.html`. Each
 | 10 | Transfer hook | 1 | Custom transfer hook — transfers run creator code |
 | 11 | Transfer fee | 1 | Charges a fee on every transfer |
 
-If nothing triggers: *Safe — No red flags found.*
+If nothing triggers: *No major red flags — "No automated check found a problem — still do your own research."*
+
+The top level is deliberately **not** called "Safe": passing automated checks doesn't establish that a token is safe.
 
 ## Trusted list
 

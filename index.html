@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OnTrace — the Solana toolbox</title>
-<meta name="description" content="Free Solana tools: wallet scan and cleanup, swap, multi-send, token creator, token checker, trending, watchlists, alerts, dev tracking, wallet graphs and transaction inspection.">
+<meta name="description" content="Understand your wallet, investigate what you don't trust, and take control of your on-chain activity on Solana. Free and open source.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:title" content="OnTrace — the Solana toolbox">
-<meta property="og:description" content="Scan, clean, swap, send, create and trace on Solana. Free and open source.">
+<meta property="og:description" content="Understand your wallet, investigate what you don't trust, and take control of your on-chain activity on Solana. Free and open source.">
 <meta property="og:image" content="https://ontrace.space/banner.jpg">
 <meta property="og:url" content="https://ontrace.space">
 <meta name="twitter:card" content="summary_large_image">
@@ -114,6 +114,16 @@
   .feat:hover{border-color:var(--accent)}
   .feat .ic{font-size:22px} .feat h3{font-family:"Orbitron",system-ui,sans-serif;font-size:13px;letter-spacing:.6px;margin:6px 0 4px;color:var(--accent)}
   .feat p{margin:0;color:var(--muted);font-size:13px}
+  .pillars{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:12px;margin:18px 0}
+  .pillar{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .pillar-main{border-color:var(--accent2);box-shadow:0 0 18px rgba(255,59,212,.12)}
+  .pillar .ic{font-size:22px} .pillar h3{font-family:"Orbitron",system-ui,sans-serif;font-size:13px;letter-spacing:.8px;margin:6px 0 6px;color:var(--accent)}
+  .pillar-main h3{color:var(--accent2)}
+  .pillar p{margin:0 0 12px;color:var(--muted);font-size:13px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:#000;color:var(--text);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600}
+  .chip:hover{border-color:var(--accent);box-shadow:none !important;color:var(--accent)}
+  @media (max-width:860px){ .pillars{grid-template-columns:1fr} }
   .trust{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--text);font-size:13px}
   .trust span:before{content:"✓ ";color:var(--accent);font-weight:800}
   a.btnlink{display:inline-block;padding:10px 16px;border:1px solid var(--accent2);border-radius:10px;color:var(--text);text-decoration:none;font-weight:700;font-size:14px}
@@ -150,7 +160,7 @@
       <img src="logo.png" alt="OnTrace logo" width="66" height="66">
       <div>
         <div class="wordmark">ONTRACE</div>
-        <div class="tag">The Solana toolbox — <b>scan</b>, clean, swap, send, create &amp; <b>trace</b>.</div>
+        <div class="tag"><b>Understand</b> your wallet. <b>Investigate</b> what you don't trust. <b>Take control</b> on Solana.</div>
       </div>
     </div>
     <div class="row" style="flex:0 0 auto">
@@ -164,38 +174,47 @@
   </header>
 
   <section id="intro" class="intro">
-    <h1>Know what's in your wallet. <span>Trace it before you trust it.</span></h1>
-    <p class="lead">OnTrace is a free Solana toolbox. Scan your wallet for scam tokens, get back SOL locked in empty accounts, trade and send safely, launch tokens with fair defaults, and see who's really behind a coin — all in one place.</p>
+    <h1>Understand your wallet. <span>Investigate what you don't trust.</span> Take control of your on-chain activity.</h1>
+    <p class="lead">OnTrace goes beyond balances. It shows what's really in your wallet, explains the activity and relationships behind any token, wallet or transaction, and gives you the tools to act on what you find.</p>
     <div class="row" style="flex-wrap:wrap">
       <button id="introScan" style="flex:0 0 auto">Scan my wallet</button>
       <a class="btnlink" href="security.html" style="flex:0 0 auto">How OnTrace keeps you safe</a>
       <div></div>
       <button id="introHide" class="linkbtn" style="flex:0 0 auto">Hide intro</button>
     </div>
-    <div class="feat-grid">
-      <div class="feat" data-go="scan"><div class="ic">🧹</div><h3>CLEAN</h3><p>Reclaim locked SOL, burn spam tokens, revoke risky approvals.</p></div>
-      <div class="feat" data-go="check"><div class="ic">🛡️</div><h3>PROTECT</h3><p>Every token rated Safe to Likely scam — with the reasons why.</p></div>
-      <div class="feat" data-go="swap"><div class="ic">⚡</div><h3>TRADE</h3><p>Best-price swaps via Jupiter, with a safety check before you buy.</p></div>
-      <div class="feat" data-go="create"><div class="ic">🚀</div><h3>LAUNCH</h3><p>Create tokens that can't be frozen, with supply you can lock.</p></div>
-      <div class="feat" data-go="dev"><div class="ic">🕵️</div><h3>TRACK</h3><p>Watch wallets, get alerts, trace devs and map wallet connections.</p></div>
-      <div class="feat" data-go="inspect"><div class="ic">🔍</div><h3>INSPECT</h3><p>Decode any transaction and catch wallet drainers before you sign.</p></div>
+    <div class="pillars">
+      <div class="pillar">
+        <div class="ic">🔍</div><h3>UNDERSTAND</h3>
+        <p>See what you really hold, how healthy your wallet is, and which tokens carry red flags — with the reasons why.</p>
+        <div class="chips"><button class="chip" data-go="scan">Wallet scan</button><button class="chip" data-go="check">Token checker</button></div>
+      </div>
+      <div class="pillar pillar-main">
+        <div class="ic">🕵️</div><h3>INVESTIGATE</h3>
+        <p>Decode transactions before you sign, find who's behind a token, map how wallets connect, and watch the wallets that matter.</p>
+        <div class="chips"><button class="chip" data-go="inspect">Tx inspector</button><button class="chip" data-go="dev">Dev tracker</button><button class="chip" data-go="graph">Wallet graph</button><button class="chip" data-go="watch">Watchlist &amp; alerts</button><button class="chip" data-go="trending">Trending</button></div>
+      </div>
+      <div class="pillar">
+        <div class="ic">⚡</div><h3>TAKE CONTROL</h3>
+        <p>Reclaim locked SOL, burn junk, revoke approvals — then swap, send and launch with every transaction safety-checked.</p>
+        <div class="chips"><button class="chip" data-go="scan">Clean up</button><button class="chip" data-go="swap">Swap</button><button class="chip" data-go="send">Multi-send</button><button class="chip" data-go="create">Create token</button></div>
+      </div>
     </div>
-    <div class="trust"><span>Never asks for your seed phrase</span><span>Nothing signs without your approval</span><span>Open source</span><span>No fees</span></div>
+    <div class="trust"><span>Never asks for your seed phrase</span><span>Nothing signs without your approval</span><span>Every transaction safety-checked</span><span>Open source</span><span>No OnTrace platform fees — standard Solana network fees apply</span></div>
   </section>
 
   <div id="status" class="status hidden"></div>
 
   <div class="tabs">
     <button data-tab="scan" class="active">Portfolio &amp; cleanup</button>
+    <button data-tab="check">Token checker</button>
+    <button data-tab="inspect">Tx inspector</button>
+    <button data-tab="dev">Dev tracker</button>
+    <button data-tab="graph">Wallet graph</button>
+    <button data-tab="watch">Watchlist</button>
+    <button data-tab="trending">Trending</button>
     <button data-tab="swap">Swap</button>
     <button data-tab="send">Multi-send</button>
     <button data-tab="create">Create token</button>
-    <button data-tab="check">Token checker</button>
-    <button data-tab="trending">Trending</button>
-    <button data-tab="watch">Watchlist</button>
-    <button data-tab="dev">Dev tracker</button>
-    <button data-tab="graph">Wallet graph</button>
-    <button data-tab="inspect">Tx inspector</button>
     <button data-tab="settings">Settings</button>
   </div>
 
@@ -457,7 +476,7 @@
   </section>
 
   <footer>
-    <strong>Transparency.</strong> OnTrace runs entirely in your browser and never asks for your seed phrase. Every transaction is shown in your wallet before you approve it. Cleanup uses only standard Solana Token Program instructions (close, burn, revoke). Swaps are routed by Jupiter; market data comes from DexScreener. OnTrace charges no fees. Risk ratings are automated signals, not financial advice — always do your own research.
+    <strong>Transparency.</strong> OnTrace runs entirely in your browser and never asks for your seed phrase. Every transaction is shown in your wallet before you approve it. Cleanup uses only standard Solana Token Program instructions (close, burn, revoke). Swaps are routed by Jupiter; market data comes from DexScreener. OnTrace charges no platform fees; standard Solana network fees apply. Risk ratings are automated signals, not guarantees or financial advice — "No major red flags" means no automated check found a problem, not that a token is safe. Always do your own research.
     <div class="contact">
       <a href="https://x.com/0ntrace" target="_blank" rel="noopener" aria-label="OnTrace on X">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>@0ntrace</a>

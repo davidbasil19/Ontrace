@@ -112,10 +112,13 @@
 
     <article class="content">
     <h1 id="overview">OnTrace Documentation</h1>
-    <p class="sub">Everything you need to use OnTrace — the free Solana toolbox to scan, clean, swap, send, create and trace.</p>
+    <p class="sub">Understand your wallet. Investigate what you don't trust. Take control of your on-chain activity. Everything you need to use OnTrace.</p>
 
     <div class="card">
-      <strong>What OnTrace is.</strong> A website that works with your Solana wallet. It reads public blockchain data to show what's in a wallet and how risky each token is, and it builds transactions (cleanup, swaps, sends, token creation) that <em>you</em> approve in your own wallet.<br><br>
+      <strong>What OnTrace is.</strong> A website that works with your Solana wallet, built around three ideas:<br>
+      <strong>Understand</strong> — see what's really in a wallet and which tokens carry red flags.<br>
+      <strong>Investigate</strong> — decode transactions, trace token developers, map wallet relationships and monitor wallets.<br>
+      <strong>Take control</strong> — clean up, swap, send and create tokens, with every transaction safety-checked before <em>you</em> approve it in your own wallet.<br><br>
       <strong>What it isn't.</strong> OnTrace is not a wallet, exchange or custodian. It never holds your funds, never sees your seed phrase, and has no server that stores your data.
     </div>
 
@@ -138,7 +141,8 @@
     <h2 id="requirements">Requirements</h2>
     <ul>
       <li><strong>A Solana wallet</strong> — <a href="https://phantom.com/download" target="_blank" rel="noopener">Phantom</a>, <a href="https://solflare.com/download" target="_blank" rel="noopener">Solflare</a> or <a href="https://backpack.app/download" target="_blank" rel="noopener">Backpack</a>. Only needed for actions; read-only tools work without one.</li>
-      <li><strong>A little SOL</strong> for network fees (each transaction costs a fraction of a cent). Token creation and multi-send also need SOL for account deposits.</li>
+      <li><strong>A little SOL</strong> for standard Solana network fees (usually a fraction of a cent per transaction). OnTrace charges no platform fees. Token creation and multi-send also need SOL for refundable account deposits.</li>
+      <li><strong>No setup.</strong> OnTrace has a built-in connection to Solana — nothing to configure.</li>
       <li><strong>A modern browser</strong> — Chrome, Brave, Edge, Firefox or Safari, or your wallet app's built-in browser on a phone.</li>
     </ul>
 
@@ -172,7 +176,7 @@
     <h2 id="settings">Settings</h2>
     <table>
       <tr><th>Setting</th><th>What it does</th></tr>
-      <tr><td><strong>RPC endpoint</strong></td><td>The connection OnTrace uses to read Solana. A default is built in. Advanced users can paste their own (e.g. a personal Helius URL); it's saved only in your browser.</td></tr>
+      <tr><td><strong>RPC endpoint</strong></td><td>The connection OnTrace uses to read Solana. <strong>A default is built in — you don't need to change this.</strong> Advanced users can paste their own from a known provider (Helius, QuickNode, Alchemy, Triton, Ankr, PublicNode); it's saved only in your browser.</td></tr>
       <tr><td><strong>Priority fee</strong></td><td>A tiny extra tip so transactions confirm faster when Solana is busy. <em>Low</em> is recommended; use <em>Medium</em> or <em>High</em> if transactions keep timing out.</td></tr>
     </table>
 
@@ -390,7 +394,7 @@ RecipientWalletAddress3</pre>
     <p>Every token gets one of four ratings. OnTrace combines live market data (DexScreener) with the token's on-chain settings, and the most serious signal wins.</p>
     <table>
       <tr><th>Rating</th><th>Meaning</th></tr>
-      <tr><td><span class="b b0">Safe</span></td><td>Well-known token, or no red flags found</td></tr>
+      <tr><td><span class="b b0">No major red flags</span></td><td>Well-known token, or no automated check found a problem. <strong>This is not a guarantee that a token is safe.</strong></td></tr>
       <tr><td><span class="b b1">Caution</span></td><td>Worth knowing — not necessarily bad</td></tr>
       <tr><td><span class="b b2">High risk</span></td><td>Real chance you can't sell or could lose funds</td></tr>
       <tr><td><span class="b b3">Likely scam</span></td><td>Matches a strong scam pattern</td></tr>
@@ -398,7 +402,7 @@ RecipientWalletAddress3</pre>
     <h3>The rules</h3>
     <table>
       <tr><th>Signal</th><th>Rating</th></tr>
-      <tr><td>Well-known token (SOL, USDC, USDT, PYUSD, JUP, BONK, mSOL, JitoSOL, JupSOL, bSOL)</td><td>Safe</td></tr>
+      <tr><td>Well-known token (SOL, USDC, USDT, PYUSD, JUP, BONK, mSOL, JitoSOL, JupSOL, bSOL)</td><td>No major red flags</td></tr>
       <tr><td>Market cap over $100K, more than 100× liquidity, and under 50 trades in 24h</td><td>Likely scam</td></tr>
       <tr><td>Permanent delegate set</td><td>Likely scam</td></tr>
       <tr><td>No trading market found</td><td>High risk</td></tr>

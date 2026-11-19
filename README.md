@@ -5,8 +5,8 @@
 <h1 align="center">OnTrace</h1>
 
 <p align="center">
-  <strong>Trace it before you trust it.</strong><br>
-  The free Solana toolbox — scan, clean, swap, send, create and trace.
+  <strong>Understand your wallet. Investigate what you don't trust. Take control of your on-chain activity.</strong><br>
+  The free, open-source Solana toolbox.
 </p>
 
 <p align="center">
@@ -53,14 +53,15 @@
 
 ## What is OnTrace?
 
-OnTrace is a free, browser-based toolbox for Solana users. It brings the everyday jobs of a Solana wallet into one place:
+OnTrace is a free, browser-based toolbox for Solana built around one promise: **understand your wallet, investigate what you don't trust, and take control of your on-chain activity.**
 
-- **See what's really in your wallet** — value, health score, and a risk rating on every token.
-- **Clean it up** — reclaim SOL locked in empty token accounts, burn spam tokens, revoke risky approvals.
-- **Trade and move funds** — best-price swaps, multi-wallet sends, and token creation with safe defaults.
-- **Investigate** — watch wallets, get alerts, trace token developers, map wallet relationships, and decode transactions before you sign them.
+- **Understand** — see what's really in a wallet: value, health score, and a risk signal on every token with the reasons behind it.
+- **Investigate** — go beyond balances: decode transactions before you sign them, trace who's behind a token, map how wallets connect, and monitor the wallets that matter.
+- **Take control** — reclaim SOL locked in empty accounts, burn spam, revoke approvals, then swap, send and launch tokens — with every transaction safety-checked first.
 
-Everything runs **in your browser**. There is no OnTrace server, no account, no sign-up, and no fees. OnTrace never sees your seed phrase, and nothing happens without your wallet's approval.
+Plenty of tools show prices and balances. OnTrace's focus is the activity and relationships *behind* what you see.
+
+Everything runs **in your browser**. There is no OnTrace server, no account, no sign-up, and **no OnTrace platform fees** (standard Solana network fees apply). OnTrace never sees your seed phrase, and nothing happens without your wallet's approval.
 
 ## Pages
 
@@ -91,7 +92,7 @@ OnTrace exists to make those risks visible and fixable by anyone — not just pe
 | **Wallet scan** | Reads every token account (both the classic Token Program and Token-2022) and shows total portfolio value, SOL balance, and a 0–100 **wallet health score**. |
 | **Read-only mode** | Paste *any* wallet address to scan it without connecting a wallet. Cleanup buttons stay disabled. |
 | **Reclaim SOL** | Every token account holds a small rent deposit (~0.002 SOL). Empty accounts keep that SOL locked. OnTrace closes them in batches (20 per transaction) and sends the SOL back to you. |
-| **Risk ratings** | Every token gets a rating — *Safe*, *Caution*, *High risk* or *Likely scam* — with the reasons listed. See [How the risk ratings work](#how-the-risk-ratings-work). |
+| **Risk ratings** | Every token gets a rating — *No major red flags*, *Caution*, *High risk* or *Likely scam* — with the reasons listed. See [How the risk ratings work](#how-the-risk-ratings-work). |
 | **Burn junk** | Tick spam or worthless tokens and OnTrace burns them and closes their accounts, returning the deposit. High-risk, near-zero-value tokens are pre-selected. A confirmation dialog shows the estimated value being destroyed before anything is sent. |
 | **Approvals manager** | Lists every token account with an active *delegate* (someone allowed to move your tokens), labels whether the delegate is an app/program or a **personal wallet** (a red flag), and revokes selected approvals in bulk. |
 | **Unwrap SOL** | Converts wrapped SOL (wSOL) back into native SOL. |
@@ -144,7 +145,7 @@ Paste any token mint to see:
 - Solana tokens currently getting attention on DexScreener (latest profiles and top boosts).
 - Sort by 24h volume, 24h change, market cap or newest.
 - **Boosted** tokens are labelled — boosts are paid promotion, not organic demand.
-- Quick risk rating on every row, plus one-click **Check** and **Swap**.
+- Quick risk rating (with creator-permission checks) on every row, plus one-click **Check** and **Swap**.
 
 ### 7. Watchlist & live alerts
 
@@ -216,7 +217,7 @@ Ratings combine **live market data** (from DexScreener) with **on-chain mint set
 
 | Signal | Level |
 |---|---|
-| Well-known token (SOL, USDC, USDT, PYUSD, JUP, BONK, mSOL, JitoSOL, JupSOL, bSOL) | Safe |
+| Well-known token (SOL, USDC, USDT, PYUSD, JUP, BONK, mSOL, JitoSOL, JupSOL, bSOL) | No major red flags |
 | Market cap over $100K, more than 100× its liquidity, and fewer than 50 trades in 24h (*fake market cap*) | **Likely scam** |
 | Token-2022 **permanent delegate** (someone can move tokens out of any holder's wallet) | **Likely scam** |
 | No trading market found (often spam airdrops or dead tokens) | High risk |
@@ -230,7 +231,7 @@ Ratings combine **live market data** (from DexScreener) with **on-chain mint set
 
 Full details: [docs/RISK-ENGINE.md](docs/RISK-ENGINE.md).
 
-> Ratings are automated signals to help you ask better questions. They are **not** financial advice and can't catch every scam.
+> Ratings are automated signals to help you ask better questions. **"No major red flags" means no automated check found a problem — not that a token is safe.** Ratings are not financial advice and can't catch every scam.
 
 ---
 
@@ -389,13 +390,13 @@ Before any major release, run through the app end-to-end on **devnet** with a th
 ## FAQ
 
 **Is OnTrace free?**
-Yes. There are no fees on any tool.
+OnTrace charges no platform fees. Standard Solana network fees apply (usually a fraction of a cent), plus an optional priority fee and refundable account deposits for some actions.
 
 **Can OnTrace take my funds?**
 No. It can only ask your wallet to sign transactions, and your wallet shows each one before you approve. It never sees your seed phrase.
 
-**Why does it say mainnet needs an RPC key?**
-Solana's free public endpoint blocks requests from websites. A free key from a provider like Helius fixes it.
+**Do I need to configure anything?**
+No. ontrace.space has a built-in RPC connection. (If you self-host, Solana's free public endpoint blocks browser requests, so set your own provider key in `DEFAULT_RPC` — see [Configuration](#configuration).)
 
 **What happens when I "reclaim SOL"?**
 OnTrace closes token accounts that hold zero tokens. Each one returns its rent deposit (about 0.002 SOL) to you. Accounts with tokens in them are never touched.

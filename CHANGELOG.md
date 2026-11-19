@@ -2,6 +2,17 @@
 
 All notable changes to OnTrace are listed here.
 
+## [1.4.0] — 2026-11-19
+
+### Changed
+- **Positioning:** homepage leads with one promise — *Understand your wallet. Investigate what you don't trust. Take control of your on-chain activity.* Tools are grouped under Understand, Investigate (highlighted) and Take control. Tabs reordered to lead with understanding and investigation.
+- **Ratings:** the top risk level is renamed from "Safe" to **"No major red flags"**, because passing automated checks doesn't establish that a token is safe.
+- **Fees wording:** "No OnTrace platform fees — standard Solana network fees apply" everywhere.
+- **RPC wording:** clarified that ontrace.space has a built-in connection and needs no setup; the "configure an RPC" message now only applies to self-hosted copies.
+
+### Added
+- **Audit status** on the Security page and in SECURITY.md: not yet independently audited.
+
 ## [1.3.0] — 2026-11-19
 
 ### Security
