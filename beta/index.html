@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OnTrace — the Solana toolbox</title>
+<meta name="description" content="Understand your wallet, investigate what you don't trust, and take control of your on-chain activity on Solana. Free and open source.">
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="OnTrace — the Solana toolbox">
+<meta property="og:description" content="Understand your wallet, investigate what you don't trust, and take control of your on-chain activity on Solana. Free and open source.">
+<meta property="og:image" content="https://ontrace.space/banner.jpg">
+<meta property="og:url" content="https://ontrace.space">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@0ntrace">
+<meta name="twitter:image" content="https://ontrace.space/banner.jpg">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.helius-rpc.com https://api.mainnet-beta.solana.com https://api.devnet.solana.com https://api.testnet.solana.com https://*.quiknode.pro https://*.g.alchemy.com https://*.rpcpool.com https://rpc.ankr.com https://solana-rpc.publicnode.com https://lite-api.jup.ag https://api.dexscreener.com; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="boot.js"></script>
+<style>
+  @font-face{font-family:"Orbitron";font-weight:600;font-display:swap;src:url(../fonts/orbitron-600.woff2) format("woff2")}
+  @font-face{font-family:"Orbitron";font-weight:800;font-display:swap;src:url(../fonts/orbitron-800.woff2) format("woff2")}
+  :root{
+    --bg:#000000; --panel:#0d0d0d; --panel2:#151515; --line:#262626;
+    --text:#f2f2f2; --muted:#9a9a9a; --accent:#b6ff3b; --accent2:#ff3bd4;
+    --ok:#22c55e; --warn:#f5b84b; --high:#f97316; --bad:#ef4444;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  a{color:var(--accent2)}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px}
+  header.hero{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:28px 26px;margin-bottom:18px;border:1px solid var(--line);border-radius:18px;background:#000}
+  .hero .deco{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .hero > *:not(.deco){position:relative}
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand img{width:66px;height:66px;filter:drop-shadow(0 0 10px rgba(182,255,59,.25))}
+  .wordmark{font-family:"Orbitron",system-ui,sans-serif;font-weight:800;font-size:34px;letter-spacing:4px;line-height:1;color:var(--text)}
+  .tag{color:var(--muted);font-size:13px;font-weight:500;margin-top:6px;letter-spacing:.3px}
+  .tag b{color:var(--accent);font-weight:600}
+  .panel h2, .tabs button{font-family:"Orbitron",system-ui,sans-serif;letter-spacing:.6px}
+  .panel h2{font-weight:600}
+  .tabs button{font-size:12px;font-weight:600}
+  @media (max-width:640px){ .wordmark{font-size:24px;letter-spacing:3px} .brand img{width:48px;height:48px} header.hero{padding:20px 16px} .hero .deco{opacity:.35} }
+  button{background:var(--accent);color:#000;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:14px}
+  button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--accent2)}
+  button.small{padding:5px 10px;font-size:12px;border-radius:8px}
+  button:not(.secondary):not(.danger):hover{box-shadow:0 0 16px rgba(182,255,59,.45)}
+  button.danger{background:var(--bad);color:#fff}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+  input,select,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px;width:100%;font-family:inherit}
+  textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;min-height:140px;resize:vertical}
+  label{display:block;color:var(--muted);font-size:12px;margin:0 0 5px;text-transform:uppercase;letter-spacing:.5px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row > *{flex:1 1 auto}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .panel h2{margin:0 0 4px;font-size:17px}
+  .panel .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;border-top:2px solid var(--accent2)}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+  .card .v{font-size:26px;font-weight:800;margin-top:4px}
+  .card .h{color:var(--muted);font-size:12px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  td.num,th.num{text-align:right;white-space:nowrap}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+  .b0{background:rgba(34,197,94,.15);color:var(--ok)}
+  .b1{background:rgba(245,184,75,.15);color:var(--warn)}
+  .b2{background:rgba(249,115,22,.16);color:var(--high)}
+  .b3{background:rgba(239,68,68,.16);color:var(--bad)}
+  .bp{background:rgba(255,59,212,.15);color:var(--accent2)}
+  .up{color:var(--ok)} .down{color:var(--bad)}
+  .reasons{color:var(--muted);font-size:12px;margin-top:3px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--muted);word-break:break-all}
+  .hidden{display:none !important}
+  .status{padding:10px 14px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);margin-bottom:16px;font-size:14px}
+  .status.err{border-color:var(--bad);color:#fecaca}
+  .status.ok{border-color:var(--ok)}
+  .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .tabs button{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+  .tabs button.active{color:#000;background:var(--accent);border-color:var(--accent);box-shadow:0 0 14px rgba(182,255,59,.35)}
+  .score{font-size:44px;font-weight:900}
+  .tokname{font-weight:700}
+  footer{color:var(--muted);font-size:12px;padding:20px 0 40px;line-height:1.7}
+  .contact{display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:center;padding:18px 0 6px;margin-top:6px;border-top:1px solid var(--line);font-size:14px}
+  .contact a{display:inline-flex;align-items:center;gap:8px;color:var(--text);text-decoration:none;padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+  .contact a:hover{border-color:var(--accent);box-shadow:0 0 12px rgba(182,255,59,.25)}
+  .contact svg{width:16px;height:16px;fill:currentColor}
+  .copyright{text-align:center;margin-top:10px}
+  .scroll{overflow-x:auto}
+  .check{width:auto;accent-color:var(--accent);margin-right:6px}
+  .checkline{display:flex;align-items:flex-start;gap:6px;color:var(--text);font-size:14px;margin:8px 0;text-transform:none;letter-spacing:0}
+  .report{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+  .report .card .v{font-size:18px}
+  .quote{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .quote .big{font-size:24px;font-weight:800}
+  .warnbox{border:1px solid var(--high);background:rgba(249,115,22,.08);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13px}
+  .note{color:var(--muted);font-size:12px;margin-top:8px}
+  @media (max-width:640px){ .hide-sm{display:none} }
+  /* ---- design system: spacing 8/12/16/24/32, radius 12/16, one primary + one secondary button style ---- */
+  button.secondary{background:transparent;color:var(--text);border:1px solid #3a3a3a}
+  button.secondary:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-lg{padding:13px 20px;font-size:15px;border-radius:12px}
+  .panel{border-radius:16px;padding:20px;margin-bottom:20px}
+  .cards{gap:14px;margin-bottom:20px}
+  .card{border-radius:16px}
+  /* nav */
+  .nav{margin-bottom:20px}
+  .navgroups{display:flex;gap:4px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow-x:auto;scrollbar-width:none}
+  .navgroups::-webkit-scrollbar{display:none}
+  .navgroups button{flex:1 0 auto;background:transparent;color:var(--muted);border:0;border-radius:10px;padding:11px 16px;font-family:"Orbitron",system-ui,sans-serif;font-size:12.5px;font-weight:600;letter-spacing:.6px;white-space:nowrap}
+  .navgroups button:hover{color:var(--text);box-shadow:none !important}
+  .navgroups button.active{background:var(--accent);color:#000;box-shadow:0 0 14px rgba(182,255,59,.3) !important}
+  .subtabs{display:flex;gap:6px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+  .subtabs:empty{display:none}
+  .subtabs::-webkit-scrollbar{display:none}
+  .subtabs button{flex:0 0 auto;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;white-space:nowrap}
+  .subtabs button:hover{color:var(--text);box-shadow:none !important}
+  .subtabs button.active{color:var(--accent);border-color:var(--accent)}
+  /* overview hero */
+  .ov-hero{display:grid;grid-template-columns:1fr 1.05fr;gap:28px;align-items:center;margin:8px 0 36px}
+  .kicker{font-family:"Orbitron",system-ui,sans-serif;color:var(--accent2);font-size:13px;letter-spacing:1px;margin-bottom:10px}
+  .ov-title{font-family:"Orbitron",system-ui,sans-serif;font-size:30px;line-height:1.25;margin:0 0 14px;letter-spacing:.3px}
+  .ov-title span{color:var(--accent)}
+  .ov-lead{color:var(--muted);font-size:15.5px;margin:0 0 22px;max-width:560px}
+  .ov-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  /* dashboard preview */
+  .preview{background:linear-gradient(180deg,#0f0f0f,#080808);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 40px rgba(182,255,59,.06)}
+  .pv-top{display:flex;align-items:center;gap:6px;padding:2px 4px 12px}
+  .pv-dot{width:9px;height:9px;border-radius:50%;background:#2a2a2a}
+  .pv-label{margin-left:8px;color:var(--muted);font-size:12px;font-family:ui-monospace,monospace}
+  .pv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .pv-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .pv-k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+  .pv-v{font-size:22px;font-weight:800;margin-top:4px}
+  .pv-lime{color:var(--accent)}
+  .pv-sub{color:var(--muted);font-size:12px;margin-top:2px}
+  .pv-health{display:flex;align-items:center;gap:10px}
+  .ring{width:62px;height:62px;flex:0 0 auto}
+  .pv-wide{grid-column:span 2}
+  .riskbar{display:flex;height:10px;border-radius:999px;overflow:hidden;gap:2px;margin:10px 0 8px}
+  .legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--muted)}
+  .legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+  .pv-graph svg{width:100%;height:auto;margin-top:6px}
+  .pv-alert{grid-column:span 3}
+  .pv-flag{font-size:12.5px;margin-top:8px;padding:7px 9px;border-radius:8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25)}
+  .pv-flag.ok{background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.25)}
+  .pv-foot{text-align:center;color:#666;font-size:11px;margin-top:10px}
+  /* groups + tiles */
+  .ov-h2{font-family:"Orbitron",system-ui,sans-serif;font-size:16px;letter-spacing:.6px;margin:0 0 14px}
+  .groups{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:12px}
+  .group{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .group-main{border-color:rgba(255,59,212,.45)}
+  .group-h{display:flex;justify-content:space-between;align-items:center;font-family:"Orbitron",system-ui,sans-serif;font-size:12px;letter-spacing:.8px;color:var(--muted);text-transform:uppercase}
+  .tile{display:grid;grid-template-columns:28px 1fr;grid-template-areas:"i t" "i d" "i a";column-gap:12px;row-gap:3px;text-align:left;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:14px;min-height:118px;font-weight:400}
+  .tile:hover{border-color:var(--accent);box-shadow:0 0 14px rgba(182,255,59,.15) !important}
+  .tile .ti{grid-area:i;font-size:20px;line-height:1.2;width:28px;text-align:center}
+  .tile .tt{grid-area:t;font-family:"Orbitron",system-ui,sans-serif;font-size:13px;font-weight:600;letter-spacing:.8px;color:var(--accent)}
+  .tile .td{grid-area:d;color:var(--muted);font-size:12.5px;line-height:1.45}
+  .tile .ta{grid-area:a;color:var(--text);font-weight:700;font-size:13px;margin-top:6px}
+  .tile:hover .ta{color:var(--accent)}
+  @media (max-width:980px){ .ov-hero{grid-template-columns:1fr} .groups{grid-template-columns:1fr} }
+  @media (max-width:560px){ .ov-title{font-size:22px} .pv-grid{grid-template-columns:1fr 1fr} .pv-wide,.pv-alert,.pv-reclaim{grid-column:span 2} .pv-graph{display:none} .btn-lg{flex:1 1 100%} .navgroups button{flex:0 0 auto} }
+  /* intro */
+  .intro{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;margin-bottom:18px}
+  .intro h1{font-family:"Orbitron",system-ui,sans-serif;font-size:28px;line-height:1.2;margin:0 0 8px;letter-spacing:.5px}
+  .intro h1 span{color:var(--accent)}
+  .intro p.lead{color:var(--muted);font-size:15px;margin:0 0 16px;max-width:760px}
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+  @media (max-width:860px){ .feat-grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:520px){ .feat-grid{grid-template-columns:1fr} }
+  .feat{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .15s}
+  .feat:hover{border-color:var(--accent)}
+  .feat .ic{font-size:22px} .feat h3{font-family:"Orbitron",system-ui,sans-serif;font-size:13px;letter-spacing:.6px;margin:6px 0 4px;color:var(--accent)}
+  .feat p{margin:0;color:var(--muted);font-size:13px}
+  .pillars{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:12px;margin:18px 0}
+  .pillar{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .pillar-main{border-color:var(--accent2);box-shadow:0 0 18px rgba(255,59,212,.12)}
+  .pillar .ic{font-size:22px} .pillar h3{font-family:"Orbitron",system-ui,sans-serif;font-size:13px;letter-spacing:.8px;margin:6px 0 6px;color:var(--accent)}
+  .pillar-main h3{color:var(--accent2)}
+  .pillar p{margin:0 0 12px;color:var(--muted);font-size:13px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:#000;color:var(--text);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600}
+  .chip:hover{border-color:var(--accent);box-shadow:none !important;color:var(--accent)}
+  @media (max-width:860px){ .pillars{grid-template-columns:1fr} }
+  .trust{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--text);font-size:13px}
+  .trust span:before{content:"✓ ";color:var(--accent);font-weight:800}
+  a.btnlink{display:inline-block;padding:10px 16px;border:1px solid var(--accent2);border-radius:10px;color:var(--text);text-decoration:none;font-weight:700;font-size:14px}
+  .linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;padding:0;font-weight:500;font-size:12px;cursor:pointer}
+  .linkbtn:hover{box-shadow:none !important;color:var(--text)}
+  .footlinks{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-size:13px}
+  .footlinks a{color:var(--muted)} .footlinks a:hover{color:var(--text)}
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .modal-box{background:var(--panel);border:1px solid var(--line);border-top:2px solid var(--accent);border-radius:16px;padding:22px;width:100%;max-width:400px}
+  .modal-box h2{font-family:"Orbitron",system-ui,sans-serif;font-size:16px;margin:0 0 6px}
+  .wallet-btn{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:10px;background:var(--panel2);color:var(--text);border:1px solid var(--line);text-decoration:none;border-radius:12px;padding:13px 15px;font-weight:700;font-size:15px}
+  .wallet-btn:hover{border-color:var(--accent);box-shadow:0 0 12px rgba(182,255,59,.2) !important}
+  .wallet-btn small{color:var(--muted);font-weight:500}
+  @media (max-width:640px){ .intro{padding:18px} .intro h1{font-size:21px} }
+  /* ================= v2: landing page + sidebar app ================= */
+  body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  a.btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 22px;border-radius:12px;background:var(--accent);color:#000;font-weight:700;text-decoration:none;font-size:15px}
+  a.btn:hover{box-shadow:0 0 16px rgba(182,255,59,.45)}
+  a.btn.ghost{background:transparent;color:var(--text);border:1px solid #444}
+  a.btn.ghost:hover{border-color:var(--accent);color:var(--accent);box-shadow:none}
+  .btn-xl{height:54px !important;padding:0 26px !important;font-size:16px !important;border-radius:14px !important}
+  .brandlink{display:flex;align-items:center;gap:12px;color:var(--text);text-decoration:none}
+  .mark{width:40px;height:40px;flex:0 0 auto}
+  .wm{font-family:"Orbitron",system-ui,sans-serif;font-weight:800;font-size:20px;letter-spacing:1.5px}
+  .wm b{color:var(--accent);font-weight:800}
+  /* landing */
+  .lp-wrap{max-width:1240px;margin:0 auto;padding:0 32px}
+  .lp-head{display:flex;align-items:center;justify-content:space-between;height:84px;gap:16px}
+  .lp-nav{display:flex;gap:28px}
+  .lp-nav a{color:#cfcfcf;text-decoration:none;font-size:15px}
+  .lp-nav a:hover{color:var(--text)}
+  .lp-hero{display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center;padding:56px 0 96px}
+  .lp-copy{display:flex;flex-direction:column;gap:24px}
+  .pill{align-self:flex-start;font-size:13px;letter-spacing:2px;color:var(--accent);border:1px solid rgba(182,255,59,.4);border-radius:999px;padding:7px 14px}
+  .lp-h1{font-family:"Orbitron",system-ui,sans-serif;font-weight:800;font-size:60px;line-height:1.06;margin:0;letter-spacing:.5px}
+  .lp-h1 span{color:var(--accent)}
+  .lp-lead{font-size:19px;color:#cfcfcf;line-height:1.55;margin:0;max-width:560px}
+  .lp-ctas{display:flex;gap:14px;flex-wrap:wrap}
+  .lp-trust{display:flex;gap:10px 22px;flex-wrap:wrap;color:#a8a8a8;font-size:14px}
+  .lp-trust span:before{content:"✓ ";color:var(--accent);font-weight:800}
+  .lp-visual{position:relative}
+  .lp-trace{position:absolute;right:-30px;top:-64px;width:480px;max-width:100%;opacity:.6;pointer-events:none}
+  .lp-prev{position:relative;background:#0b0b0b;border:1px solid #262626;border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:14px}
+  .lp-prev-top{display:flex;justify-content:space-between;font-size:13px;color:#8a8a8a}
+  .lp-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .lp-tile{background:#111;border-radius:16px;padding:16px}
+  .lp-row{background:#111;border-radius:16px;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .lp-row .nm{font-weight:600}.lp-row .sub,.lp-tile .sub{font-size:12px;color:#8a8a8a}
+  .lp-sec{padding-bottom:100px}
+  .eyebrow{font-size:13px;letter-spacing:2px;color:#8a8a8a;text-transform:uppercase}
+  .lp-h2{font-family:"Orbitron",system-ui,sans-serif;font-weight:600;font-size:36px;line-height:1.15;margin:10px 0 36px}
+  .three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+  .kit{background:#0b0b0b;border:1px solid #333;border-radius:22px;padding:28px}
+  .kit h3{font-family:"Orbitron",system-ui,sans-serif;font-weight:800;font-size:19px;letter-spacing:3px;margin:0 0 12px}
+  .kit p{color:#cfcfcf;margin:0;font-size:16px}
+  .kit ul{padding-left:18px;line-height:1.9;margin:14px 0 0}
+  .kit.lime{border-color:var(--accent)} .kit.lime h3{color:var(--accent)}
+  .kit.mag{border-color:var(--accent2)} .kit.mag h3{color:var(--accent2)}
+  .step{border-top:2px solid var(--accent);padding-top:20px}
+  .step b{font-family:"Orbitron",system-ui,sans-serif;font-size:28px;color:var(--accent);display:block}
+  .step h3{margin:8px 0;font-size:20px}
+  .step p{color:#cfcfcf;margin:0;font-size:16px}
+  .safe{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center;background:#0b0b0b;border:1px solid #262626;border-radius:28px;padding:48px}
+  .safe p{color:#cfcfcf;font-size:17px}
+  .safe ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+  .safe li{background:#111;border-radius:16px;padding:16px 18px;font-size:16px}
+  .safe li:before{content:"✓  ";color:var(--accent);font-weight:800}
+  .cta{border:1px solid var(--accent);border-radius:28px;padding:56px 32px;text-align:center;background:#070707;display:flex;flex-direction:column;align-items:center;gap:16px}
+  .cta h2{font-family:"Orbitron",system-ui,sans-serif;font-weight:800;font-size:38px;line-height:1.15;margin:0}
+  .lp-foot{border-top:1px solid #1c1c1c;padding:28px 0 40px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;color:#8a8a8a;font-size:14px}
+  .lp-foot nav{display:flex;gap:20px;flex-wrap:wrap}
+  .lp-foot a{color:#cfcfcf;text-decoration:none} .lp-foot a:hover{color:var(--accent)}
+  /* app shell */
+  .app{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+  .side{position:sticky;top:0;height:100vh;overflow-y:auto;background:#070707;border-right:1px solid #1c1c1c;padding:24px 14px;display:flex;flex-direction:column;gap:20px}
+  .side .brandlink{padding:0 8px}
+  .side-nav{display:flex;flex-direction:column;gap:2px}
+  .glabel{font-size:11px;letter-spacing:2px;color:#8a8a8a;padding:16px 12px 6px}
+  .side-nav button,.side-nav a{display:flex;align-items:center;gap:12px;width:100%;background:transparent;color:#bdbdbd;border:0;border-radius:10px;padding:10px 12px;font-weight:500;font-size:14.5px;text-align:left;text-decoration:none;font-family:inherit}
+  .side-nav button:hover,.side-nav a:hover{background:#141414;color:var(--text);box-shadow:none !important}
+  .side-nav button.active{background:rgba(182,255,59,.1);color:var(--accent)}
+  .side-nav svg,.ico{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .side-div{height:1px;background:#1c1c1c;margin:14px 12px}
+  .sidecard{margin-top:auto;border:1px solid #2a2a2a;border-radius:16px;padding:16px;background:#0d0d0d;font-size:13px;color:#a8a8a8;line-height:1.5}
+  .sidecard strong{display:block;color:var(--text);font-size:14px;margin-bottom:4px}
+  .sidecard a{color:var(--accent);font-weight:600}
+  .main{min-width:0;padding:24px 32px 24px}
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .topbar h1{font-family:"Orbitron",system-ui,sans-serif;font-weight:600;font-size:22px;letter-spacing:1px;margin:0;flex:0 0 auto}
+  .gsearch{flex:1 1 320px;display:flex;gap:8px;min-width:220px;margin:0}
+  .gsearch input{height:44px;border-radius:12px}
+  .gsearch button{border-radius:12px}
+  .topbar select{width:auto;height:44px}
+  .topbar #connectBtn,.topbar #disconnectBtn{height:44px;border-radius:12px}
+  .menuBtn{display:none !important;align-items:center;justify-content:center;width:44px;height:44px;padding:0 !important}
+  .backdrop{display:none}
+  /* dashboard */
+  .dgrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px;margin-bottom:20px}
+  .dcard{background:#0b0b0b;border:1px solid #1e1e1e;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+  .dcard h2{margin:0;font-size:15px;font-weight:600}
+  .dcard.lime{border-color:var(--accent)}
+  .dhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .dhead a,.dhead .linkbtn{font-size:13px;font-weight:600;color:var(--accent);text-decoration:none}
+  .s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s7{grid-column:span 7}.s12{grid-column:span 12}
+  .dhealth{display:flex;align-items:center;gap:20px}
+  .dring{width:128px;height:128px;flex:0 0 auto}
+  .dstats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .dstat{background:#111;border-radius:14px;padding:14px}
+  .dstat span{display:block;font-size:13px;color:#a8a8a8}
+  .dstat b{font-family:"Orbitron",system-ui,sans-serif;font-weight:600;font-size:24px}
+  .bigv{font-family:"Orbitron",system-ui,sans-serif;font-weight:800;font-size:38px;color:var(--accent);line-height:1.1}
+  .dcard .txt{font-size:14px;color:#cfcfcf;margin:0}
+  .dcard .grow{margin-top:auto}
+  .bars{display:flex;flex-direction:column;gap:14px}
+  .bar{display:grid;grid-template-columns:170px 1fr 44px;align-items:center;gap:12px;font-size:14px}
+  .bar .t{height:12px;background:#1a1a1a;border-radius:6px;overflow:hidden}
+  .bar .t i{display:block;height:100%;border-radius:6px}
+  .bar .n{text-align:right;font-weight:600}
+  .lrows{display:flex;flex-direction:column;gap:10px}
+  .lrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;background:#111;border-radius:14px;color:var(--text);text-decoration:none;border:1px solid transparent}
+  a.lrow:hover{border-color:#333}
+  .lrow .nm{font-weight:600}.lrow .sub{font-size:12px;color:#8a8a8a}
+  .comp{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:3px;background:#1a1a1a}
+  .tags{display:flex;flex-wrap:wrap;gap:8px}
+  .tags span{font-size:12px;border:1px solid #333;border-radius:999px;padding:4px 10px;color:#cfcfcf}
+  .addrbig{font-family:"Orbitron",system-ui,sans-serif;font-weight:600;font-size:16px;letter-spacing:.5px;word-break:break-all}
+  .dempty{align-items:center;text-align:center;padding:48px 24px}
+  .dempty h2{font-family:"Orbitron",system-ui,sans-serif;font-size:22px;letter-spacing:.5px}
+  .dempty .row{max-width:640px;width:100%}
+  .dempty .row{flex-wrap:nowrap} .dempty .row input{flex:1 1 200px;width:auto;min-width:0}
+  @media (max-width:560px){ .dempty .row{flex-wrap:wrap} .dempty .row > *{flex:1 1 100%} }
+  .main{display:flex;flex-direction:column;min-height:100vh}
+  .appfoot{margin-top:auto;padding:14px 0 4px;border-top:1px solid #1c1c1c;display:flex;justify-content:space-between;gap:6px 16px;flex-wrap:wrap;font-size:11px;line-height:1.5;color:#777}
+  .appfoot nav{display:flex;gap:4px 14px;flex-wrap:wrap}
+  .appfoot a{color:#8a8a8a;text-decoration:none}.appfoot a:hover{color:var(--accent)}
+  /* sprint 1: explanations, permissions, address checker */
+  .adv{display:none}
+  body.adv-mode .adv{display:inline}
+  .term{display:inline;position:relative;background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit;font-weight:inherit;cursor:help;border-bottom:1px dotted #777;border-radius:0}
+  .term:hover,.term:focus{box-shadow:none !important;outline:none;border-bottom-color:var(--accent)}
+  .term::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 8px);z-index:30;width:max-content;max-width:280px;padding:10px 12px;border-radius:10px;background:#1a1a1a;border:1px solid #333;color:#e6e6e6;font-size:13px;font-weight:400;line-height:1.45;text-transform:none;letter-spacing:0;text-align:left;white-space:normal;opacity:0;visibility:hidden;transition:opacity .12s;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+  .term:hover::after,.term:focus::after{opacity:1;visibility:visible}
+  .perm{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+  .perm-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .perm h3,.idcard h3{font-family:"Orbitron",system-ui,sans-serif;font-size:15px;letter-spacing:.5px;margin:0}
+  .perm-row{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .perm-row.on{border-color:#3a3a3a}
+  .perm-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .perm-t{font-weight:700;font-size:15px}
+  .perm-m{margin:8px 0 0;font-size:14px;color:var(--text)}
+  .perm-n{margin:6px 0 0;font-size:13px;color:var(--muted)}
+  .perm-n b{color:#cfcfcf;font-weight:600}
+  .perm-x{margin-top:8px;font-size:12.5px;color:var(--muted);display:flex;gap:4px 14px;flex-wrap:wrap}
+  .who{word-break:break-all}
+  .why{margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+  .why summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent)}
+  .why-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px;font-size:13px}
+  .why-grid b{display:block;margin-bottom:4px}
+  .why-grid ul{margin:0;padding-left:18px;color:var(--muted);line-height:1.6}
+  .idcard{margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .idcard.lvl0{border-color:rgba(182,255,59,.45)} .idcard.lvl1{border-color:rgba(245,184,75,.5)} .idcard.lvl2{border-color:rgba(239,68,68,.55)}
+  @media (max-width:640px){ .why-grid{grid-template-columns:1fr} .term::after{max-width:230px} }
+  @media (max-width:1100px){ .s3,.s4,.s5,.s7{grid-column:span 12} }
+  @media (max-width:860px){
+    .app{grid-template-columns:1fr}
+    .side{position:fixed;top:0;left:0;bottom:0;width:280px;z-index:45;transform:translateX(-100%);transition:transform .2s ease}
+    .side.open{transform:none}
+    .backdrop.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:44}
+    .menuBtn{display:inline-flex !important}
+    .main{padding:14px}
+    .topbar h1{font-size:18px;flex:1 1 auto}
+    .gsearch{order:5;flex:1 1 100%}
+    .lp-hero,.safe{grid-template-columns:1fr}
+    .three{grid-template-columns:1fr}
+    .lp-nav{display:none}
+    .lp-h1{font-size:40px}
+    .lp-wrap{padding:0 18px}
+    .lp-h2,.cta h2{font-size:28px}
+    .safe{padding:26px}
+    .lp-hero{padding:28px 0 64px;gap:48px}
+    .bar{grid-template-columns:120px 1fr 36px}
+    .dhealth{gap:14px}.dring{width:104px;height:104px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LANDING ================= -->
+<div id="landing">
+  <header class="lp-wrap lp-head">
+    <a href="#" class="brandlink" data-home aria-label="OnTrace home"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><rect x="1" y="1" width="38" height="38" rx="11" fill="#0E0E0E" stroke="#B6FF3B" stroke-width="1.5"/><path d="M9 27 L16 18 L22 23 L31 12" fill="none" stroke="#B6FF3B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="18" r="2.6" fill="#000" stroke="#B6FF3B" stroke-width="2"/><circle cx="31" cy="12" r="3.2" fill="#FF3BD4"/></svg><span class="wm">ON<b>TRACE</b></span></a>
+    <nav class="lp-nav" aria-label="Site">
+      <a href="#features">Features</a><a href="#how">How it works</a><a href="security.html">Security</a><a href="docs.html">Docs</a><a href="faq.html">FAQ</a>
+    </nav>
+    <a href="#dashboard" class="btn">Launch app</a>
+  </header>
+
+  <section class="lp-wrap lp-hero">
+    <div class="lp-copy">
+      <span class="pill">FREE · OPEN SOURCE · SOLANA</span>
+      <h1 class="lp-h1">Trace it before you <span>trust</span> it.</h1>
+      <p class="lp-lead">Understand your wallet. Investigate what you don't trust. Take control of your on-chain activity, all in one free toolbox.</p>
+      <div class="lp-ctas">
+        <button id="introScan" class="btn-xl">Scan my wallet</button>
+        <a href="#check" class="btn ghost btn-xl">Check a token</a>
+      </div>
+      <div class="lp-trust"><span>No sign-up</span><span>No fees from OnTrace</span><span>Your keys never leave your wallet</span></div>
+    </div>
+    <div class="lp-visual">
+      <svg class="lp-trace" viewBox="0 0 520 140" aria-hidden="true"><path d="M10 120 L130 60 L250 95 L390 30 L510 70" fill="none" stroke="#B6FF3B" stroke-width="1.5" stroke-dasharray="4 8"/><circle cx="130" cy="60" r="5" fill="#B6FF3B"/><circle cx="250" cy="95" r="5" fill="#B6FF3B"/><circle cx="390" cy="30" r="6" fill="#FF3BD4"/></svg>
+      <div class="lp-prev" aria-label="Example OnTrace dashboard">
+        <div class="lp-prev-top"><span>Example wallet</span><span><span style="color:var(--accent)">●</span> 7xKX…9fQ2</span></div>
+        <div class="lp-2">
+          <div class="lp-tile" style="display:flex;align-items:center;gap:14px">
+            <svg width="80" height="80" viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="54" fill="none" stroke="#1e1e1e" stroke-width="14"/><circle cx="66" cy="66" r="54" fill="none" stroke="#f5b84b" stroke-width="14" stroke-linecap="round" stroke-dasharray="244 340" transform="rotate(-90 66 66)"/><text x="66" y="78" text-anchor="middle" fill="#f2f2f2" font-family="Orbitron, sans-serif" font-weight="800" font-size="38">72</text></svg>
+            <div><div class="sub">Wallet health</div><div style="font-weight:600">Fair</div></div>
+          </div>
+          <div class="lp-tile" style="border:1px solid var(--accent)">
+            <div class="sub">SOL to reclaim</div>
+            <div class="bigv" style="font-size:30px">0.124</div>
+            <div class="sub">from 58 empty accounts</div>
+          </div>
+        </div>
+        <div class="lp-row"><div><div class="nm">FREESOL</div><div class="sub">Creator can freeze it · no market</div></div><span class="badge b3">Likely scam</span></div>
+        <div class="lp-row"><div><div class="nm">Open approvals</div><div class="sub">3 apps can still move your tokens</div></div><span style="color:var(--accent);font-weight:600;font-size:13px">Revoke</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-wrap lp-sec" id="features">
+    <span class="eyebrow">Everything in one place</span>
+    <h2 class="lp-h2">Three toolkits. One wallet connection.</h2>
+    <div class="three">
+      <article class="kit lime"><h3>PROTECT</h3><p>See what's hiding in your wallet and clean it up in a few clicks.</p>
+        <ul><li>Wallet health score</li><li>Revoke risky approvals</li><li>Burn junk and spam tokens</li><li>Reclaim SOL from empty accounts</li></ul></article>
+      <article class="kit mag"><h3>INVESTIGATE</h3><p>Know what you're dealing with before you buy, sign or follow.</p>
+        <ul><li>Token checker</li><li>Transaction inspector</li><li>Dev wallet tracker</li><li>Wallet relationship graph</li><li>Watchlist, alerts and trending</li></ul></article>
+      <article class="kit"><h3>TOOLS</h3><p>Do more on Solana without hopping between ten tabs.</p>
+        <ul><li>Swap at the best route</li><li>Send to many wallets at once</li><li>Create a token with no hidden freeze switch</li></ul></article>
+    </div>
+  </section>
+
+  <section class="lp-wrap lp-sec" id="how">
+    <span class="eyebrow">How it works</span>
+    <h2 class="lp-h2">From connect to clean in under a minute.</h2>
+    <div class="three">
+      <div class="step"><b>01</b><h3>Connect or paste</h3><p>Connect your wallet, or paste any address, token or transaction to look it up.</p></div>
+      <div class="step"><b>02</b><h3>See the red flags</h3><p>OnTrace explains what it finds in plain words, with the reasons behind every rating.</p></div>
+      <div class="step"><b>03</b><h3>Fix it in one click</h3><p>Revoke, burn, reclaim or swap. You approve every action in your own wallet.</p></div>
+    </div>
+  </section>
+
+  <section class="lp-wrap lp-sec">
+    <div class="safe">
+      <div>
+        <span class="eyebrow" style="color:var(--accent2)">Built safe by default</span>
+        <h2 class="lp-h2" style="font-size:32px;margin-bottom:16px">Every transaction is checked before you sign.</h2>
+        <p>OnTrace simulates each transaction first. If anything tries to hand over control of your tokens or spend more than you agreed to, it's blocked.</p>
+        <a href="security.html" style="color:var(--accent);font-weight:600">How OnTrace keeps you safe</a>
+      </div>
+      <ul><li>Never holds your keys or funds</li><li>Blocks hidden approvals and ownership changes</li><li>No third-party scripts on the page</li><li>Open source, so anyone can check the code</li></ul>
+    </div>
+  </section>
+
+  <section class="lp-wrap lp-sec" style="padding-bottom:80px">
+    <div class="cta">
+      <h2>Ready to see what's in your wallet?</h2>
+      <p style="margin:0;color:#cfcfcf;font-size:18px">Free. No sign-up. Takes a few seconds.</p>
+      <a href="#dashboard" class="btn btn-xl">Launch OnTrace</a>
+    </div>
+  </section>
+
+  <footer class="lp-wrap lp-foot">
+    <span>© 2026 OnTrace</span>
+    <nav aria-label="Footer"><a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="security.html">Security</a><a href="terms.html">Terms &amp; Privacy</a><a href="https://github.com/davidbasil19/Ontrace" target="_blank" rel="noopener">GitHub</a></nav>
+    <nav aria-label="Contact"><a href="https://x.com/0ntrace" target="_blank" rel="noopener">@0ntrace</a><a href="mailto:team@ontrace.space">team@ontrace.space</a></nav>
+  </footer>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app" class="app hidden">
+  <aside class="side" id="side">
+    <a href="#" class="brandlink" data-home aria-label="OnTrace home"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><rect x="1" y="1" width="38" height="38" rx="11" fill="#0E0E0E" stroke="#B6FF3B" stroke-width="1.5"/><path d="M9 27 L16 18 L22 23 L31 12" fill="none" stroke="#B6FF3B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="18" r="2.6" fill="#000" stroke="#B6FF3B" stroke-width="2"/><circle cx="31" cy="12" r="3.2" fill="#FF3BD4"/></svg><span class="wm">ON<b>TRACE</b></span></a>
+    <nav class="side-nav" aria-label="Tools">
+      <div class="glabel">OVERVIEW</div>
+      <button data-tab="dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard</button>
+      <div class="glabel">SECURITY</div>
+      <button data-tab="scan"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg>Wallet scan &amp; cleanup</button>
+      <button data-tab="check"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 12l2 2 4-4"/></svg>Token checker</button>
+      <button data-tab="address"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M14 10h4M14 14h3"/></svg>Address checker</button>
+      <div class="glabel">INVESTIGATE</div>
+      <button data-tab="inspect"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h7"/></svg>Tx inspector</button>
+      <button data-tab="dev"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Dev tracker</button>
+      <button data-tab="graph"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="5" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M7.3 11l9.4-4.8M7.3 13l9.4 4.8"/></svg>Wallet graph</button>
+      <button data-tab="watch"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 21h4"/></svg>Watchlist &amp; alerts</button>
+      <button data-tab="trending"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Trending</button>
+      <div class="glabel">TOOLS</div>
+      <button data-tab="swap"><svg viewBox="0 0 24 24"><path d="M7 4v14M7 18l-3-3M7 18l3-3M17 20V6M17 6l-3 3M17 6l3 3"/></svg>Swap</button>
+      <button data-tab="send"><svg viewBox="0 0 24 24"><path d="M4 12h8M12 12l8-7M12 12l8 7M12 12h8"/></svg>Multi-send</button>
+      <button data-tab="create"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg>Create token</button>
+      <div class="side-div"></div>
+      <button data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Settings</button>
+      <a href="docs.html"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/></svg>Docs</a>
+    </nav>
+    <div class="sidecard"><strong>Stay safe</strong>OnTrace will never ask for your seed phrase or private key. <a href="security.html">Read the security guide</a></div>
+  </aside>
+  <div class="backdrop" id="backdrop"></div>
+
+  <main class="main">
+    <div class="topbar">
+      <button id="menuBtn" class="secondary menuBtn" aria-label="Open menu" aria-controls="side" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <h1 id="pageTitle">Dashboard</h1>
+      <form class="gsearch" id="gsearch" role="search">
+        <input id="gq" aria-label="Search a wallet, token or transaction" placeholder="Paste a wallet, token or transaction" autocomplete="off" spellcheck="false">
+        <button type="submit" style="flex:0 0 auto">Search</button>
+      </form>
+      <select id="network" aria-label="Network">
+        <option value="mainnet-beta">Mainnet</option>
+        <option value="devnet">Devnet (testing)</option>
+      </select>
+      <button id="connectBtn" disabled>Loading…</button>
+      <button id="disconnectBtn" class="secondary hidden">Disconnect</button>
+    </div>
+
+    <div id="status" class="status hidden"></div>
+
+    <!-- ================= DASHBOARD ================= -->
+    <section id="tab-dashboard">
+      <div id="dashEmpty" class="dcard dempty" style="margin-bottom:20px">
+        <h2>See your wallet at a glance</h2>
+        <p class="sub" style="max-width:560px;margin:0">Connect your wallet to get your health score, SOL you can reclaim and any risky tokens. Or paste any address for a read-only look.</p>
+        <div class="row">
+          <button id="dashConnect" style="flex:0 0 auto">Connect wallet</button>
+          <input id="dashAddr" placeholder="…or paste a wallet address" autocomplete="off" spellcheck="false">
+          <button id="dashScan" class="secondary" style="flex:0 0 auto">Scan</button>
+        </div>
+        <p class="note" style="margin:0">Scanning never asks for a signature.</p>
+      </div>
+
+      <div id="dashBody" class="dgrid hidden">
+        <div class="dcard s4">
+          <div class="dhead"><h2>Wallet health</h2><span class="note" style="margin:0" id="dMode"></span></div>
+          <div class="dhealth">
+            <svg class="dring" viewBox="0 0 132 132" role="img" id="dRing" aria-label="Health score">
+              <circle cx="66" cy="66" r="54" fill="none" stroke="#1e1e1e" stroke-width="12"/>
+              <circle id="dRingArc" cx="66" cy="66" r="54" fill="none" stroke="#B6FF3B" stroke-width="12" stroke-linecap="round" stroke-dasharray="0 340" transform="rotate(-90 66 66)"/>
+              <text id="dScore" x="66" y="70" text-anchor="middle" fill="#f2f2f2" font-family="Orbitron, sans-serif" font-weight="800" font-size="34">–</text>
+              <text x="66" y="92" text-anchor="middle" fill="#8a8a8a" font-size="12">out of 100</text>
+            </svg>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span id="dLabel" class="badge b1" style="align-self:flex-start"></span>
+              <p class="txt" id="dFix"></p>
+            </div>
+          </div>
+          <button class="secondary grow" data-go="scan">Review &amp; fix</button>
+        </div>
+
+        <div class="dcard s5">
+          <h2>At a glance</h2>
+          <div class="dstats">
+            <div class="dstat"><span>Portfolio value</span><b id="dPort">–</b></div>
+            <div class="dstat"><span>Open approvals</span><b id="dAppr">–</b></div>
+            <div class="dstat"><span>Risky tokens</span><b id="dRisky">–</b></div>
+            <div class="dstat"><span>Empty accounts</span><b id="dEmpty">–</b></div>
+          </div>
+        </div>
+
+        <div class="dcard s3 lime">
+          <h2>SOL to reclaim</h2>
+          <div class="bigv" id="dReclaim">–</div>
+          <p class="txt" id="dReclaimTxt"></p>
+          <button id="dReclaimBtn" class="grow">Reclaim SOL</button>
+        </div>
+
+        <div class="dcard s7">
+          <div><h2>What's lowering your score</h2><p class="sub" style="margin:4px 0 0">Points taken off your health score, by cause.</p></div>
+          <div class="bars" id="dBars"></div>
+        </div>
+
+        <div class="dcard s5">
+          <div class="dhead"><h2>Riskiest tokens</h2><button class="linkbtn" data-go="scan">See all</button></div>
+          <div class="lrows" id="dRiskList"></div>
+        </div>
+
+        <div class="dcard s7">
+          <div class="dhead"><h2>Recent checks</h2><button class="linkbtn" data-go="check">Open token checker</button></div>
+          <div class="lrows" id="dChecks"></div>
+        </div>
+
+        <div class="dcard s5">
+          <h2>Wallet summary</h2>
+          <div class="addrbig" id="dAddr"></div>
+          <div class="tags" id="dTags"></div>
+          <div class="comp" id="dComp"></div>
+          <div class="legend" id="dLegend" style="font-size:13px;color:#cfcfcf"></div>
+          <div class="row grow">
+            <button id="dRescan" style="flex:1 1 140px">Scan again</button>
+            <button class="secondary" data-go="graph" style="flex:1 1 140px">Map connections</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+  <!-- ================= PORTFOLIO ================= -->
+  <section id="tab-scan" class="hidden">
+    <div class="panel">
+      <h2>Scan a wallet</h2>
+      <p class="sub">Connect your wallet to scan and clean it, or paste any address for a read-only scan. Scanning never asks for a signature.</p>
+      <div class="row">
+        <input id="addrInput" placeholder="Wallet address (optional — leave empty to use connected wallet)">
+        <button id="scanBtn" style="flex:0 0 auto">Scan</button>
+      </div>
+    </div>
+
+    <div id="results" class="hidden">
+      <div class="cards">
+        <div class="card"><div class="k">Portfolio value</div><div class="v" id="totalV">–</div><div class="h" id="totalH"></div></div>
+        <div class="card"><div class="k">Wallet health</div><div class="score" id="scoreV">–</div><div class="h" id="scoreH"></div></div>
+        <div class="card"><div class="k">SOL to reclaim</div><div class="v" id="reclaimV">–</div><div class="h" id="reclaimH"></div></div>
+        <div class="card"><div class="k">Risky tokens</div><div class="v" id="riskV">–</div><div class="h">High risk or likely scam</div></div>
+        <div class="card"><div class="k">Active approvals</div><div class="v" id="delegV">–</div><div class="h">Apps allowed to move tokens</div></div>
+      </div>
+
+      <div class="panel">
+        <h2>Reclaim locked SOL</h2>
+        <p class="sub">Every empty token account holds a small SOL deposit. Closing it sends that SOL back to you. Nothing else is touched.</p>
+        <div class="row">
+          <div id="reclaimInfo" class="mono"></div>
+          <button id="reclaimBtn" style="flex:0 0 auto">Reclaim SOL</button>
+        </div>
+      </div>
+
+      <div class="panel" id="delegPanel">
+        <h2>Active approvals</h2>
+        <p class="sub">These token accounts have a delegate — someone you (or an app) approved to move your tokens. A <strong>personal wallet</strong> holding approval over your tokens is a red flag. Revoke anything you don't recognise.</p>
+        <div class="scroll"><table id="delegTable"></table></div>
+        <div class="row" style="margin-top:12px"><div></div><button id="revokeBtn" class="secondary" style="flex:0 0 auto">Revoke selected</button></div>
+      </div>
+
+      <div class="panel">
+        <h2>Your tokens</h2>
+        <p class="sub">Risk ratings come from live market data and on-chain token settings. Tick junk tokens to burn them and reclaim their SOL deposit.</p>
+        <div class="scroll"><table id="tokTable"></table></div>
+        <div class="row" style="margin-top:12px">
+          <div id="burnInfo" class="mono"></div>
+          <button id="burnBtn" class="danger" style="flex:0 0 auto">Burn selected &amp; reclaim</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SWAP ================= -->
+  <section id="tab-swap" class="hidden">
+    <div class="panel">
+      <h2>Swap</h2>
+      <p class="sub">Best-price routing across Solana DEXs, powered by Jupiter. OnTrace checks the token you're buying before you swap. Mainnet only.</p>
+      <div class="grid2">
+        <div><label>You pay</label><select id="swapFrom"></select></div>
+        <div><label>Amount</label><div class="row" style="flex-wrap:nowrap"><input id="swapAmt" placeholder="0.0" inputmode="decimal"><button id="swapMax" class="secondary small" style="flex:0 0 auto">Max</button></div></div>
+      </div>
+      <div class="grid2">
+        <div><label>You receive</label>
+          <select id="swapTo">
+            <option value="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v">USDC</option>
+            <option value="So11111111111111111111111111111111111111112">SOL</option>
+            <option value="Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB">USDT</option>
+            <option value="JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN">JUP</option>
+            <option value="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263">BONK</option>
+            <option value="custom">Other token (paste address)…</option>
+          </select>
+        </div>
+        <div><label>Slippage</label>
+          <select id="swapSlip">
+            <option value="50">0.5% (stable / large caps)</option>
+            <option value="100" selected>1%</option>
+            <option value="300">3%</option>
+            <option value="1000">10% (fast-moving memecoins)</option>
+          </select>
+        </div>
+      </div>
+      <input id="swapToCustom" class="hidden" placeholder="Token mint address to buy" style="margin-bottom:12px">
+      <button id="quoteBtn">Get quote</button>
+      <div id="swapQuote"></div>
+    </div>
+  </section>
+
+  <!-- ================= MULTI-SEND ================= -->
+  <section id="tab-send" class="hidden">
+    <div class="panel">
+      <h2>Multi-send</h2>
+      <p class="sub">Send SOL or any token to many wallets at once — airdrops, team payments, giveaways. Recipients without a token account get one created automatically (you pay the small deposit).</p>
+      <div class="grid2">
+        <div><label>Token to send</label><select id="sendToken"></select></div>
+        <div><label>Default amount (optional)</label><input id="sendDefault" placeholder="Used for lines with no amount" inputmode="decimal"></div>
+      </div>
+      <label>Recipients — one per line: address, amount</label>
+      <textarea id="sendList" placeholder="7xKX...abc, 100&#10;9fRk...xyz, 250&#10;H3pq...def"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button id="sendPreview" class="secondary" style="flex:0 0 auto">Check list</button>
+        <div></div>
+        <button id="sendBtn" style="flex:0 0 auto" disabled>Send</button>
+      </div>
+      <div id="sendOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= CREATE TOKEN ================= -->
+  <section id="tab-create" class="hidden">
+    <div class="panel">
+      <h2>Create a token</h2>
+      <p class="sub">Launch a Solana token (Token-2022 standard) with its name and symbol stored on-chain. Safe defaults: tokens can never be frozen, and the supply can be locked so no more can ever be minted.</p>
+      <div class="grid2">
+        <div><label>Name (max 32)</label><input id="ctName" maxlength="32" placeholder="OnTrace"></div>
+        <div><label>Symbol (max 10)</label><input id="ctSymbol" maxlength="10" placeholder="ONTRACE"></div>
+        <div><label>Total supply</label><input id="ctSupply" value="1000000000" inputmode="numeric"></div>
+        <div><label>Decimals</label><select id="ctDecimals"><option>6</option><option>9</option><option>0</option><option>2</option></select></div>
+      </div>
+      <label>Metadata link (optional)</label>
+      <input id="ctUri" maxlength="200" placeholder="https://ontrace.space/token.json — JSON with your logo and description">
+      <details style="margin:8px 0 4px"><summary class="note" style="cursor:pointer">What goes in the metadata link?</summary>
+        <p class="note">Host a small JSON file (for example on your own site) so wallets and explorers show your logo:</p>
+        <pre class="mono" style="background:var(--panel2);padding:10px;border-radius:8px;white-space:pre-wrap">{
+  "name": "OnTrace",
+  "symbol": "ONTRACE",
+  "description": "The Solana toolbox.",
+  "image": "https://ontrace.space/logo.png",
+  "external_url": "https://ontrace.space"
+}</pre>
+      </details>
+      <label class="checkline"><input type="checkbox" class="check" id="ctRevokeMint" checked> Lock supply (revoke mint authority) — recommended; buyers trust fixed supply</label>
+      <label class="checkline"><input type="checkbox" class="check" id="ctLockMeta"> Lock name &amp; logo forever (remove update authority)</label>
+      <p class="note">Freeze authority is never set, so nobody — including you — can freeze holders' tokens.</p>
+      <div class="row" style="margin-top:12px">
+        <div id="ctCost" class="mono"></div>
+        <button id="ctBtn" style="flex:0 0 auto">Create token</button>
+      </div>
+      <div id="ctOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= CHECKER ================= -->
+  <section id="tab-check" class="hidden">
+    <div class="panel">
+      <h2>Token checker</h2>
+      <p class="sub">Paste a token's mint address before you buy. OnTrace checks its market, liquidity and creator permissions.</p>
+      <div class="row">
+        <input id="mintInput" placeholder="Token mint address">
+        <button id="checkBtn" style="flex:0 0 auto">Check token</button>
+      </div>
+      <div id="checkOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= ADDRESS CHECKER ================= -->
+  <section id="tab-address" class="hidden">
+    <div class="panel">
+      <h2>Address checker</h2>
+      <p class="sub">Paste any Solana address to see what kind of account it is before you send anything to it. Sending to a token's ID, a program or a token account instead of a wallet can lose your funds for good.</p>
+      <div class="row">
+        <input id="idAddr" placeholder="Solana address" autocomplete="off" spellcheck="false">
+        <button id="idBtn" style="flex:0 0 auto">Check address</button>
+      </div>
+      <div id="idOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= TRENDING ================= -->
+  <section id="tab-trending" class="hidden">
+    <div class="panel">
+      <h2>Trending on Solana</h2>
+      <p class="sub">Tokens getting attention on DexScreener right now. <span class="badge bp">Boosted</span> means the team paid for promotion — not the same as organic demand. Always check before buying.</p>
+      <div class="row"><select id="trendSort" style="width:auto;flex:0 0 auto">
+        <option value="vol">Sort: 24h volume</option><option value="chg">Sort: 24h change</option><option value="mcap">Sort: market cap</option><option value="age">Sort: newest</option>
+      </select><div></div><button id="trendBtn" style="flex:0 0 auto">Refresh</button></div>
+      <div class="scroll" style="margin-top:12px"><table id="trendTable"></table></div>
+    </div>
+  </section>
+
+
+  <!-- ================= WATCHLIST ================= -->
+  <section id="tab-watch" class="hidden">
+    <div class="panel">
+      <h2>Wallet watchlist</h2>
+      <p class="sub">Follow any wallet — whales, devs, smart traders, your own. Saved in this browser only.</p>
+      <div class="row">
+        <input id="watchAddr" placeholder="Wallet address">
+        <input id="watchLabel" placeholder="Label (e.g. Whale #1)" style="max-width:240px">
+        <button id="watchAdd" style="flex:0 0 auto">Add</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="row"><h2 style="flex:1 1 auto">Watched wallets</h2><button id="watchRefresh" class="secondary small" style="flex:0 0 auto">Refresh</button></div>
+      <div class="scroll" style="margin-top:10px"><table id="watchTable"></table></div>
+      <div id="watchDetail"></div>
+    </div>
+    <div class="panel">
+      <h2>Live alerts</h2>
+      <p class="sub">Get notified when a watched wallet makes a move. Alerts run while OnTrace is open in a browser tab (round-the-clock alerts via a Telegram bot are coming later).</p>
+      <div class="grid2">
+        <div><label>Alert me on</label><select id="alertRule">
+          <option value="all">All activity</option>
+          <option value="trades" selected>Buys, sells &amp; swaps only</option>
+          <option value="big">Only moves above the SOL threshold</option>
+        </select></div>
+        <div><label>SOL threshold</label><input id="alertMin" value="1" inputmode="decimal"></div>
+      </div>
+      <div class="row"><button id="alertToggle" style="flex:0 0 auto">Start alerts</button><div id="alertState" class="mono"></div></div>
+      <div id="alertFeed" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <!-- ================= DEV TRACKER ================= -->
+  <section id="tab-dev" class="hidden">
+    <div class="panel">
+      <h2>Developer wallet tracker</h2>
+      <p class="sub">Find who created a token, how much they still hold, whether they've been selling, and how concentrated the top holders are.</p>
+      <div class="row">
+        <input id="devMint" placeholder="Token mint address">
+        <input id="devManual" placeholder="Dev wallet (optional — if known)" style="max-width:300px">
+        <button id="devBtn" style="flex:0 0 auto">Trace dev</button>
+      </div>
+      <div id="devOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= GRAPH ================= -->
+  <section id="tab-graph" class="hidden">
+    <div class="panel">
+      <h2>Wallet relationship graph</h2>
+      <p class="sub">See who a wallet trades and transfers with most. Click a node to explore that wallet next. Off-curve addresses are programs or pools, not people.</p>
+      <div class="row">
+        <input id="graphAddr" placeholder="Wallet address">
+        <select id="graphN" style="width:auto;flex:0 0 auto"><option value="50">Last 50 txs</option><option value="100" selected>Last 100 txs</option><option value="200">Last 200 txs</option></select>
+        <button id="graphBtn" style="flex:0 0 auto">Map wallet</button>
+      </div>
+      <div id="graphOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= TX INSPECTOR ================= -->
+  <section id="tab-inspect" class="hidden">
+    <div class="panel">
+      <h2>Transaction inspector</h2>
+      <p class="sub">Paste a <strong>transaction signature</strong> to see what happened in plain English, or paste an <strong>unsigned transaction</strong> (base64) to simulate it and see exactly what would change before anyone signs. Flags drainer patterns like handing over token-account ownership.</p>
+      <textarea id="inspIn" placeholder="Signature (e.g. 5h3k…) or base64 transaction (AQAB…)" style="min-height:90px"></textarea>
+      <div class="row" style="margin-top:10px"><input id="inspFocus" placeholder="Wallet to focus on (optional — defaults to the fee payer)"><button id="inspBtn" style="flex:0 0 auto">Inspect</button></div>
+      <div id="inspOut"></div>
+    </div>
+  </section>
+
+  <!-- ================= SETTINGS ================= -->
+  <section id="tab-settings" class="hidden">
+    <div class="panel">
+      <h2>RPC endpoint</h2>
+      <p class="sub">OnTrace has a built-in connection. Advanced users can use their own RPC URL from a known provider (Helius, QuickNode, Alchemy, Triton, Ankr, PublicNode). Saved only in this browser.</p>
+      <div class="row">
+        <input id="rpcInput" placeholder="https://mainnet.helius-rpc.com/?api-key=...">
+        <button id="rpcSave" class="secondary" style="flex:0 0 auto">Save</button>
+      </div>
+      <p class="mono" id="rpcNow" style="margin-top:10px"></p>
+    </div>
+    <div class="panel">
+      <h2>Display mode</h2>
+      <p class="sub">Beginner keeps things in plain words. Advanced also shows full addresses, program IDs and technical names.</p>
+      <select id="modeSel" style="width:auto">
+        <option value="beginner">Beginner</option>
+        <option value="advanced">Advanced</option>
+      </select>
+    </div>
+    <div class="panel">
+      <h2>Priority fee</h2>
+      <p class="sub">Small tip to validators so transactions land faster when the network is busy.</p>
+      <select id="feeSel" style="width:auto">
+        <option value="0">None</option>
+        <option value="10000" selected>Low (recommended)</option>
+        <option value="100000">Medium</option>
+        <option value="1000000">High</option>
+      </select>
+    </div>
+  </section>
+
+
+  <footer class="appfoot">
+    <span>© 2026 OnTrace · Risk ratings are automated signals, not financial advice.</span>
+    <nav aria-label="Footer"><a href="docs.html">Docs</a><a href="faq.html">FAQ</a><a href="security.html">Security</a><a href="terms.html">Terms</a><a href="https://github.com/davidbasil19/Ontrace" target="_blank" rel="noopener">GitHub</a><a href="https://x.com/0ntrace" target="_blank" rel="noopener">@0ntrace</a><a href="mailto:team@ontrace.space">team@ontrace.space</a></nav>
+  </footer>
+  </main>
+</div>
+
+  <div id="walletModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="wmTitle">
+    <div class="modal-box">
+      <h2 id="wmTitle">Connect a wallet</h2>
+      <p class="note" id="wmSub" style="margin:0"></p>
+      <div id="wmList"></div>
+      <div class="row" style="margin-top:14px"><div class="note" style="margin:0">OnTrace never asks for your seed phrase.</div><button id="wmClose" class="secondary small" style="flex:0 0 auto">Close</button></div>
+    </div>
+  </div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
