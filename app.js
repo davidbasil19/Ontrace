@@ -1377,6 +1377,7 @@ function showTab(name){
   $("landing").classList.add("hidden"); $("app").classList.remove("hidden");
   document.querySelectorAll(".side-nav [data-tab]").forEach(b => { const on = b.dataset.tab === name; b.classList.toggle("active", on); on ? b.setAttribute("aria-current","page") : b.removeAttribute("aria-current"); });
   $("pageTitle").textContent = TAB_LABELS[name];
+  $("gsearch").classList.toggle("hidden", name !== "dashboard"); // each tool has its own input; the global search lives on the dashboard only
   document.title = `${TAB_LABELS[name]} · OnTrace`;
   TABS.forEach(t => $("tab-"+t).classList.toggle("hidden", t !== name));
   if (location.hash.slice(1) !== name) history.replaceState(null, "", "#" + name);

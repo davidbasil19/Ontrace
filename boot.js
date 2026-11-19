@@ -13,6 +13,7 @@
     if (!land || !app) return;
     if (tabs.indexOf(h) >= 0) {
       land.classList.add("hidden"); app.classList.remove("hidden");
+      var gs = document.getElementById("gsearch"); if (gs && h !== "dashboard") gs.classList.add("hidden");
       tabs.forEach(function (t) { var el = document.getElementById("tab-" + t); if (el) el.classList.toggle("hidden", t !== h); });
     } else { land.classList.remove("hidden"); app.classList.add("hidden"); }
   });
