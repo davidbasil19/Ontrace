@@ -15,7 +15,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ offer: 
   if (!offer) {
     return new ImageResponse(
       (
-        <div style={{ display: "flex", width: "100%", height: "100%", background: "#0E0E10", color: "#888", alignItems: "center", justifyContent: "center", fontSize: 64 }}>
+        <div style={{ display: "flex", width: "100%", height: "100%", background: "#F6F5F1", color: "#6B6A64", alignItems: "center", justifyContent: "center", fontSize: 64 }}>
           {`${BRAND.name} · deal closed`}
         </div>
       ),

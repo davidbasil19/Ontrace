@@ -60,7 +60,7 @@ export default function MarketsTable() {
                 <td className={`px-3 py-2 text-right font-mono ${(t.change[tf] ?? 0) >= 0 ? "text-up" : "text-down"}`}>{fmtPct(t.change[tf])}</td>
                 <td className="px-3 py-2 text-right font-mono">{fmtUsd(t.volume24h)}</td>
                 <td className="px-3 py-2 text-right font-mono">{fmtUsd(t.mcap)}</td>
-                <td className="px-3 py-2 text-right">{t.otc ? <span className="rounded bg-lime/15 px-2 py-0.5 text-xs font-bold text-lime">{t.otc}</span> : <span className="text-muted">—</span>}</td>
+                <td className="px-3 py-2 text-right">{t.otc ? <span className="rounded bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">{t.otc}</span> : <span className="text-muted">—</span>}</td>
                 <td className="px-3 py-2 text-right"><Link className="btn-ghost !py-1 text-xs" href={`/create?mint=${t.mint}`}>Deal</Link></td>
               </tr>
             ))}

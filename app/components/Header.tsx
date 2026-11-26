@@ -9,14 +9,14 @@ const WalletButton = dynamic(() => import("@solana/wallet-adapter-react-ui").the
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
         <Link href="/" className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="" width={34} height={34} />
           <span className="font-display text-lg font-extrabold uppercase tracking-wider">{BRAND.name}</span>
-          <span className="rounded bg-magenta/15 px-1.5 py-0.5 font-display text-[10px] font-bold text-magenta">OTC</span>
-          {CLUSTER === "devnet" && <span className="rounded bg-line px-1.5 py-0.5 text-[10px] font-bold text-lime">DEVNET</span>}
+          <span className="rounded bg-signal/15 px-1.5 py-0.5 font-display text-[10px] font-bold text-signal">OTC</span>
+          {CLUSTER === "devnet" && <span className="rounded bg-line px-1.5 py-0.5 text-[10px] font-bold text-accent">DEVNET</span>}
         </Link>
         <nav className="hidden gap-1 text-sm md:flex">
           <Link className="tab" href="/">Markets</Link>

@@ -27,7 +27,7 @@ export default function ShareBlink({ address, text, privateFor }: { address: str
         <button className="btn-ghost" onClick={() => copy("link", dealUrl)}>{copied === "link" ? "Copied" : "Copy"}</button>
       </div>
       <div className="flex flex-wrap gap-2">
-        <a className="btn-lime" href={xUrl} target="_blank" rel="noreferrer">Post on X</a>
+        <a className="btn-accent" href={xUrl} target="_blank" rel="noreferrer">Post on X</a>
         <a className="btn-ghost" href={dialUrl} target="_blank" rel="noreferrer">Preview Blink</a>
         <button className="btn-ghost" onClick={() => copy("action", actionUrl)}>{copied === "action" ? "Copied" : "Copy Action URL"}</button>
       </div>

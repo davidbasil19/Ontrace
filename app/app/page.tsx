@@ -9,11 +9,11 @@ export default function Home() {
     <div className="space-y-6">
       <section className="card flex flex-col gap-4 p-6 md:flex-row md:items-center">
         <div className="flex-1">
-          <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">{BRAND.tagline}</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">OTC deals that <span className="text-signal">travel.</span></h1>
           <p className="mt-2 max-w-2xl text-muted">{BRAND.pitch}</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/create" className="btn-lime !px-6 !py-3">Create deal</Link>
+          <Link href="/create" className="btn-accent !px-6 !py-3">Create deal</Link>
           <Link href="#how" className="btn-ghost !px-6 !py-3">How it works</Link>
         </div>
       </section>
@@ -38,7 +38,7 @@ export default function Home() {
 }
 const Step = ({ n, t, d }: { n: number; t: string; d: string }) => (
   <div className="flex gap-3">
-    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-lime text-xs font-bold text-ink">{n}</span>
+    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-xs font-bold text-white">{n}</span>
     <div><div className="font-semibold">{t}</div><div className="text-muted">{d}</div></div>
   </div>
 );

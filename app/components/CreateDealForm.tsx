@@ -113,7 +113,7 @@ export default function CreateDealForm() {
 
   return (
     <div className="card mx-auto max-w-xl space-y-5 p-5">
-      <div className="grid grid-cols-2 gap-2 rounded-xl bg-ink p-1">
+      <div className="grid grid-cols-2 gap-2 rounded-xl bg-paper p-1">
         {(["SELL", "BUY"] as const).map((s) => (
           <button key={s} onClick={() => setSide(s)} className={`rounded-lg py-2 text-sm font-bold ${side === s ? (s === "SELL" ? "bg-down/20 text-down" : "bg-up/20 text-up") : "text-muted"}`}>
             {s === "SELL" ? "Sell tokens" : "Buy tokens"}
@@ -131,7 +131,7 @@ export default function CreateDealForm() {
         )}
       </Field>
 
-      <Field label={`Amount of ${token?.symbol ?? "tokens"} to ${side === "SELL" ? "sell" : "buy"}`} right={side === "SELL" && balance != null ? <button className="text-lime" onClick={() => setAmount(String(balance))}>MAX {fmtNum(balance)}</button> : null}>
+      <Field label={`Amount of ${token?.symbol ?? "tokens"} to ${side === "SELL" ? "sell" : "buy"}`} right={side === "SELL" && balance != null ? <button className="text-accent" onClick={() => setAmount(String(balance))}>MAX {fmtNum(balance)}</button> : null}>
         <input className="input font-mono" inputMode="decimal" placeholder="0.0" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ""))} />
       </Field>
 
@@ -152,7 +152,7 @@ export default function CreateDealForm() {
         </div>
         {mode === "market" ? (
           <div className="flex items-center gap-3">
-            <input type="range" min={-50} max={50} value={pct} onChange={(e) => setPct(Number(e.target.value))} className="flex-1 accent-[var(--color-lime)]" />
+            <input type="range" min={-50} max={50} value={pct} onChange={(e) => setPct(Number(e.target.value))} className="flex-1 accent-[var(--color-accent)]" />
             <input className="input !w-20 text-right font-mono" value={pct} onChange={(e) => setPct(Number(e.target.value) || 0)} />
             <span className="text-sm text-muted">%</span>
           </div>
@@ -181,7 +181,7 @@ export default function CreateDealForm() {
         </div>
       </Field>
 
-      <div className="rounded-xl bg-ink p-4 text-sm">
+      <div className="rounded-xl bg-paper p-4 text-sm">
         <Row k="You give" v={side === "SELL" ? `${fmtNum(tokenAmt)} ${token?.symbol ?? ""}` : `${fmtNum(payAmt)} ${pay?.symbol ?? ""}`} />
         <Row k="You receive" v={side === "SELL" ? `${fmtNum(payAmt)} ${pay?.symbol ?? ""}` : `${fmtNum(tokenAmt)} ${token?.symbol ?? ""}`} />
         <Row k="Price" v={price ? `${fmtNum(price, 10)} ${pay?.symbol} / token` : "—"} />
@@ -192,7 +192,7 @@ export default function CreateDealForm() {
       </div>
 
       {problems.length > 0 && publicKey && <p className="text-xs text-down">{problems[0]}</p>}
-      <button className="btn-lime w-full !py-3" disabled={!publicKey || problems.length > 0 || pending} onClick={submit}>
+      <button className="btn-accent w-full !py-3" disabled={!publicKey || problems.length > 0 || pending} onClick={submit}>
         {!publicKey ? "Connect wallet to create" : pending ? "Signing…" : "Create deal & get Blink link"}
       </button>
     </div>

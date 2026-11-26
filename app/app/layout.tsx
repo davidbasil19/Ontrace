@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
           <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
           <footer className="mx-auto max-w-7xl px-4 py-10 text-xs text-muted">
-            {BRAND.product} · non-custodial OTC on Solana · 0% platform fees · <a className="hover:text-lime" href={`https://x.com/${BRAND.x}`}>@{BRAND.x}</a> · <a className="hover:text-lime" href={`mailto:${BRAND.email}`}>{BRAND.email}</a>
+            {BRAND.product} · non-custodial OTC on Solana · 0% platform fees · <a className="hover:text-accent" href={`https://x.com/${BRAND.x}`}>@{BRAND.x}</a> · <a className="hover:text-accent" href={`mailto:${BRAND.email}`}>{BRAND.email}</a>
           </footer>
         </Providers>
       </body>

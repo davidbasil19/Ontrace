@@ -64,8 +64,8 @@ export default function OffersBoard({ query = "", title = "Active OTC offers", e
                 <td className="px-3 py-2 text-right font-mono">{fmtNum(v.price, 8)} {v.pay.symbol}</td>
                 <td className={`px-3 py-2 text-right font-mono ${goodDeal(v.side, v.vsMarket) ? "text-up" : "text-down"}`}>{fmtPct(v.vsMarket)}</td>
                 <td className="px-3 py-2 text-right font-mono text-muted">{timeLeft(o.expiresAt)}</td>
-                <td className="px-3 py-2 font-mono text-xs"><Link href={`/wallet/${o.maker}`} className="hover:text-lime">{short(o.maker)}</Link></td>
-                <td className="px-3 py-2 text-right"><Link className="btn-lime !py-1 text-xs" href={`/deal/${o.address}`}>{v.side === "SELL" ? "Buy" : "Sell"}</Link></td>
+                <td className="px-3 py-2 font-mono text-xs"><Link href={`/wallet/${o.maker}`} className="hover:text-accent">{short(o.maker)}</Link></td>
+                <td className="px-3 py-2 text-right"><Link className="btn-accent !py-1 text-xs" href={`/deal/${o.address}`}>{v.side === "SELL" ? "Buy" : "Sell"}</Link></td>
               </tr>
             ))}
           </tbody>

@@ -19,7 +19,7 @@ export default function ActivityFeed() {
         {!ev.length && <li className="p-4 text-muted">No activity yet.</li>}
         {ev.map((e) => (
           <li key={e.sig + e.kind} className="flex items-start gap-2 p-3">
-            <span className={`mt-0.5 rounded px-1.5 text-[10px] font-bold ${e.kind === "taken" ? "bg-up/15 text-up" : "bg-lime/15 text-lime"}`}>
+            <span className={`mt-0.5 rounded px-1.5 text-[10px] font-bold ${e.kind === "taken" ? "bg-up/15 text-up" : "bg-accent/15 text-accent"}`}>
               {e.kind === "taken" ? "FILLED" : "NEW"}
             </span>
             <span className="flex-1">
@@ -27,7 +27,7 @@ export default function ActivityFeed() {
               <span className="block text-xs text-muted">
                 {short(e.maker)}
                 {e.kind === "taken" && <> → {short(e.taker)}</>} · {timeAgo(e.time)} ·{" "}
-                {e.kind === "created" ? <Link className="hover:text-lime" href={`/deal/${e.offer}`}>deal</Link> : <a className="hover:text-lime" href={explorerTx(e.sig)} target="_blank" rel="noreferrer">tx</a>}
+                {e.kind === "created" ? <Link className="hover:text-accent" href={`/deal/${e.offer}`}>deal</Link> : <a className="hover:text-accent" href={explorerTx(e.sig)} target="_blank" rel="noreferrer">tx</a>}
               </span>
             </span>
           </li>

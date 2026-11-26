@@ -27,7 +27,7 @@ export default function DealCard({ address, initial, isNew }: { address: string;
       <div className="card mx-auto max-w-xl p-8 text-center">
         <h1 className="text-xl font-bold">This deal is closed</h1>
         <p className="mt-2 text-muted">It was taken, cancelled or cleaned up after expiry.</p>
-        <Link href="/" className="btn-lime mt-6">Browse open deals</Link>
+        <Link href="/" className="btn-accent mt-6">Browse open deals</Link>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export default function DealCard({ address, initial, isNew }: { address: string;
   return (
     <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-[1.2fr_1fr]">
       <div className="card space-y-5 p-6">
-        {isNew && <div className="rounded-xl border border-lime/40 bg-lime/10 p-3 text-sm text-lime">Your deal is live. Share the Blink to get it filled →</div>}
+        {isNew && <div className="rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm text-accent">Your deal is live. Share the Blink to get it filled →</div>}
         <div className="flex items-center justify-between">
           <SideTag side={v.side} />
           <span className={`text-xs font-bold ${status === "live" ? "text-up" : "text-down"}`}>● {status.toUpperCase()}</span>
@@ -54,20 +54,20 @@ export default function DealCard({ address, initial, isNew }: { address: string;
         </div>
         <div>
           <div className="text-4xl font-extrabold">{fmtNum(v.tokenAmount)} <span className="text-muted">${v.token.symbol}</span></div>
-          <div className="mt-1 text-2xl">for <span className="font-bold text-lime">{fmtNum(v.payAmount)} {v.pay.symbol}</span></div>
+          <div className="mt-1 text-2xl">for <span className="font-bold text-accent">{fmtNum(v.payAmount)} {v.pay.symbol}</span></div>
         </div>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <Stat k="Price" v={`${fmtNum(v.price, 10)} ${v.pay.symbol}`} />
           <Stat k="vs market" v={fmtPct(v.vsMarket)} tone={v.vsMarket == null ? "" : goodDeal(v.side, v.vsMarket) ? "text-up" : "text-down"} />
           <Stat k="Expires in" v={timeLeft(o.expiresAt)} />
           <Stat k="Counterparty" v={o.taker ? `🔒 ${short(o.taker)}` : "Anyone"} />
-          <Stat k="Maker" v={<Link className="hover:text-lime" href={`/wallet/${o.maker}`}>{short(o.maker, 6)}</Link>} />
-          <Stat k="Offer account" v={<a className="hover:text-lime" href={explorerAccount(o.address)} target="_blank" rel="noreferrer">{short(o.address, 6)}</a>} />
+          <Stat k="Maker" v={<Link className="hover:text-accent" href={`/wallet/${o.maker}`}>{short(o.maker, 6)}</Link>} />
+          <Stat k="Offer account" v={<a className="hover:text-accent" href={explorerAccount(o.address)} target="_blank" rel="noreferrer">{short(o.address, 6)}</a>} />
         </div>
         {isMaker ? (
           <button className="btn-ghost w-full !py-3" disabled={pending} onClick={cancel}>{pending ? "Cancelling…" : "Cancel deal"}</button>
         ) : (
-          <button className="btn-lime w-full !py-3" disabled={!publicKey || !allowed || status !== "live" || pending} onClick={take}>
+          <button className="btn-accent w-full !py-3" disabled={!publicKey || !allowed || status !== "live" || pending} onClick={take}>
             {!publicKey
               ? "Connect wallet to take"
               : !allowed
@@ -89,7 +89,7 @@ export default function DealCard({ address, initial, isNew }: { address: string;
   );
 }
 const Stat = ({ k, v, tone = "" }: { k: string; v: React.ReactNode; tone?: string }) => (
-  <div className="rounded-xl bg-ink p-3">
+  <div className="rounded-xl bg-paper p-3">
     <div className="text-xs text-muted">{k}</div>
     <div className={`font-mono ${tone}`}>{v}</div>
   </div>

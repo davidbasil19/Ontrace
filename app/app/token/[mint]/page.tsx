@@ -19,7 +19,7 @@ export default async function TokenPage({ params }: { params: Promise<{ mint: st
         <Stat k="Vol 24h" v={fmtUsd(t?.volume24h)} />
         <div className="ml-auto flex gap-2">
           <Link className="btn-ghost" href={`/create?mint=${mint}&side=BUY`}>Post a buy</Link>
-          <Link className="btn-lime" href={`/create?mint=${mint}`}>Post a sell</Link>
+          <Link className="btn-accent" href={`/create?mint=${mint}`}>Post a sell</Link>
         </div>
       </section>
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">

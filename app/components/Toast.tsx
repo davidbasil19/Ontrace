@@ -20,7 +20,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div key={t.id} className={`card px-4 py-3 text-sm ${t.kind === "err" ? "border-down" : t.kind === "ok" ? "border-up" : ""}`}>
             {t.text}
             {t.href && (
-              <a className="ml-2 text-lime underline" href={t.href} target="_blank" rel="noreferrer">view</a>
+              <a className="ml-2 text-accent underline" href={t.href} target="_blank" rel="noreferrer">view</a>
             )}
           </div>
         ))}

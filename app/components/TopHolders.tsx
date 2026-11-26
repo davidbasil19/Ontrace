@@ -45,7 +45,7 @@ export default function TopHolders({ mint }: { mint: string }) {
         {rows?.map((h, i) => (
           <li key={h.owner + i} className="flex items-center gap-3 px-3 py-2">
             <span className="w-5 text-xs text-muted">{i + 1}</span>
-            <Link href={`/wallet/${h.owner}`} className="font-mono text-xs hover:text-lime">{short(h.owner, 5)}</Link>
+            <Link href={`/wallet/${h.owner}`} className="font-mono text-xs hover:text-accent">{short(h.owner, 5)}</Link>
             <span className="ml-auto font-mono">{fmtNum(h.amount)}</span>
             <span className="w-14 text-right font-mono text-xs text-muted">{h.pct.toFixed(2)}%</span>
             {h.owner !== publicKey?.toBase58() && (
