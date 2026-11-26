@@ -1,442 +1,114 @@
-<p align="center">
-  <img src="banner.jpg" alt="OnTrace — the Solana toolbox" width="100%">
-</p>
+# OnTrace OTC: Solana OTC deals that travel
 
-<h1 align="center">OnTrace</h1>
+A non-custodial, wallet-to-wallet OTC desk for any Solana token. It has everything FlowOTC has, and every deal is also a **Blink**: post the link on X and people can take the deal right inside the post.
 
-<p align="center">
-  <strong>Understand your wallet. Investigate what you don't trust. Take control of your on-chain activity.</strong><br>
-  The free, open-source Solana toolbox.
-</p>
+> Live at **https://ontrace.space** · X [@0ntrace](https://x.com/0ntrace) · team@ontrace.space
+>
+> The previous OnTrace toolbox (static site) is kept on the `legacy-toolbox` branch.
+> Brand settings live in `app/lib/brand.ts`.
 
-<p align="center">
-  <a href="https://ontrace.space">ontrace.space</a> ·
-  <a href="https://x.com/0ntrace">@0ntrace on X</a> ·
-  <a href="mailto:team@ontrace.space">team@ontrace.space</a>
-</p>
+## What's in the box
 
----
-
-## Table of contents
-
-- [What is OnTrace?](#what-is-ontrace)
-- [Pages](#pages)
-- [Why it exists](#why-it-exists)
-- [Features](#features)
-  - [Portfolio & cleanup](#1-portfolio--cleanup)
-  - [Swap](#2-swap)
-  - [Multi-send](#3-multi-send)
-  - [Create token](#4-create-token)
-  - [Token checker](#5-token-checker)
-  - [Trending](#6-trending)
-  - [Watchlist & live alerts](#7-watchlist--live-alerts)
-  - [Dev tracker](#8-dev-tracker)
-  - [Wallet graph](#9-wallet-graph)
-  - [Transaction inspector](#10-transaction-inspector)
-- [Safety model](#safety-model)
-- [How the risk ratings work](#how-the-risk-ratings-work)
-- [Screenshots](#screenshots)
-- [Tech stack](#tech-stack)
-- [Project structure](#project-structure)
-- [Run it yourself](#run-it-yourself)
-- [Configuration](#configuration)
-- [Deployment](#deployment)
-- [Testing & verification](#testing--verification)
-- [Known limitations](#known-limitations)
-- [Roadmap](#roadmap)
-- [FAQ](#faq)
-- [Contributing & reporting issues](#contributing--reporting-issues)
-- [Disclaimer](#disclaimer)
-- [License](#license)
-
----
-
-## What is OnTrace?
-
-OnTrace is a free, browser-based toolbox for Solana built around one promise: **understand your wallet, investigate what you don't trust, and take control of your on-chain activity.**
-
-- **Understand** — see what's really in a wallet: value, health score, and a risk signal on every token with the reasons behind it.
-- **Investigate** — go beyond balances: decode transactions before you sign them, trace who's behind a token, map how wallets connect, and monitor the wallets that matter.
-- **Take control** — reclaim SOL locked in empty accounts, burn spam, revoke approvals, then swap, send and launch tokens — with every transaction safety-checked first.
-
-Plenty of tools show prices and balances. OnTrace's focus is the activity and relationships *behind* what you see.
-
-Everything runs **in your browser**. There is no OnTrace server, no account, no sign-up, and **no OnTrace platform fees** (standard Solana network fees apply). OnTrace never sees your seed phrase, and nothing happens without your wallet's approval.
-
-## Pages
-
-| Page | URL |
+| Feature | Notes |
 |---|---|
-| Landing page | https://ontrace.space |
-| App (dashboard) | https://ontrace.space/#dashboard |
-| Documentation | https://ontrace.space/docs.html |
-| FAQ | https://ontrace.space/faq.html |
-| Security | https://ontrace.space/security.html |
-| Terms & Privacy | https://ontrace.space/terms.html |
+| Sell or buy any SPL / Token-2022 token | Pay in SOL, USDC or any other token |
+| Pricing as % vs market or fixed price | Locked at signing, with a live "vs market" readout |
+| Open or private deals | A private deal can only be taken by the named wallet |
+| Expiry from 5m to 7d | The program allows up to 30 days |
+| No escrow, atomic settlement | Tokens stay in the maker's wallet until the moment of the swap |
+| Markets table | Trending / OTC-active / gainers / losers, 1h-6h-24h (DexScreener) |
+| Offers board | Filter by side, sort by best-vs-market or ending soon, live/unfunded detection |
+| Top holders, then a private offer | Pitch a deal straight to a whale |
+| Recent activity | Parsed from on-chain program events |
+| ⌘K search | Token name, mint, wallet or deal address |
+| My deals | Private deals sent to you, plus your own deals with cancel |
+| **Blinks (the differentiator)** | `actions.json` + Action API; a deal link unfurls as a takeable card on X |
+| **Dynamic deal cards** | Auto-generated image per deal (amount, price, discount, expiry) for X previews and Blinks |
+| 0% platform fee | Only the network fee |
 
-Tools can be linked directly with a hash, e.g. `https://ontrace.space/#swap`, `#check`, `#trending`, `#inspect`.
-
-### Layout
-
-- **Landing page** — what OnTrace does, how it works and how it keeps you safe. "Launch app" opens the app.
-- **Sidebar** — every tool in one place, grouped into **Overview** (Dashboard), **Security** (Wallet scan & cleanup, Token checker, Address checker), **Investigate** (Tx inspector, Dev tracker, Wallet graph, Watchlist & alerts, Trending) and **Tools** (Swap, Multi-send, Create token), plus Settings and Docs. On phones it opens from the menu button.
-- **Search bar** — paste a wallet, token or transaction signature on the dashboard; OnTrace opens the right tool (wallets are scanned, tokens open the token checker, anything else opens the address checker).
-- **Address checker** — tells you what any address is (wallet, token account, token mint, program, program-controlled address and more) and whether it's safe to send to.
-- **Token permissions** — the token checker lists every authority and Token-2022 extension with what it means and what it doesn't mean.
-- **Display mode** — Beginner (plain words) or Advanced (full addresses, program IDs, technical names), in Settings.
-- **Dashboard** — health score and what's lowering it, portfolio value, open approvals, risky tokens, SOL to reclaim, riskiest tokens, recent checks and a holdings breakdown. Filled by a read-only scan of the connected wallet (or any pasted address).
-
-## Why it exists
-
-Solana moves fast. New tokens launch every minute, and many of them are traps: fake market caps, frozen balances, creators who mint unlimited supply, airdropped spam that leads to drainer sites. At the same time, ordinary wallets quietly lose SOL to hundreds of empty token accounts.
-
-OnTrace exists to make those risks visible and fixable by anyone — not just people who can read raw on-chain data.
-
----
-
-## Features
-
-### 1. Portfolio & cleanup
-
-| Tool | What it does |
-|---|---|
-| **Wallet scan** | Reads every token account (both the classic Token Program and Token-2022) and shows total portfolio value, SOL balance, and a 0–100 **wallet health score**. |
-| **Read-only mode** | Paste *any* wallet address to scan it without connecting a wallet. Cleanup buttons stay disabled. |
-| **Reclaim SOL** | Every token account holds a small rent deposit (~0.002 SOL). Empty accounts keep that SOL locked. OnTrace closes them in batches (20 per transaction) and sends the SOL back to you. |
-| **Risk ratings** | Every token gets a rating — *No major red flags*, *Caution*, *High risk* or *Likely scam* — with the reasons listed. See [How the risk ratings work](#how-the-risk-ratings-work). |
-| **Burn junk** | Tick spam or worthless tokens and OnTrace burns them and closes their accounts, returning the deposit. High-risk, near-zero-value tokens are pre-selected. A confirmation dialog shows the estimated value being destroyed before anything is sent. |
-| **Approvals manager** | Lists every token account with an active *delegate* (someone allowed to move your tokens), labels whether the delegate is an app/program or a **personal wallet** (a red flag), and revokes selected approvals in bulk. |
-| **Unwrap SOL** | Converts wrapped SOL (wSOL) back into native SOL. |
-
-**Health score** starts at 100 and deducts for empty accounts, likely-scam and high-risk tokens, active approvals, and dust.
-
-### 2. Swap
-
-- Best-price routing across Solana DEXs (Raydium, Orca, Meteora, PumpSwap and more) via **Jupiter's Swap API**.
-- Pick any token you hold as input; choose a common output (SOL, USDC, USDT, JUP, BONK) or paste any token address.
-- Slippage presets from 0.5% (stablecoins) to 10% (fast-moving memecoins).
-- The quote shows: estimated output, minimum after slippage, price impact, and the route used.
-- **Automatic safety check** on the token you're buying. If it's rated *High risk* or *Likely scam*, you must tick an acknowledgement box before the Swap button works.
-- High price-impact warning (above 3%).
-- **Max** button keeps a small SOL reserve for fees.
-- Mainnet only (Jupiter doesn't route on devnet).
-
-### 3. Multi-send
-
-- Send SOL or any SPL/Token-2022 token to many wallets at once — airdrops, team payouts, giveaways.
-- Paste one recipient per line: `address, amount` (commas, spaces or semicolons all work). A default amount fills in lines without one.
-- **Check list** validates every address and amount first, flags duplicates, shows totals and the number of transactions, and warns if your balance is too low.
-- Recipients without a token account get one created automatically (you pay the ~0.002 SOL deposit per new account).
-- Batches: 18 SOL transfers or 5 token transfers per transaction.
-
-### 4. Create token
-
-Launch a Solana token from the browser using the **Token-2022** standard with **on-chain metadata** (name, symbol and a metadata link stored directly on the mint).
-
-- Name (up to 32 characters), symbol (up to 10), total supply, and decimals (0, 2, 6 or 9).
-- Optional metadata link — a JSON file with your logo and description (template shown in the app).
-- **Safe defaults:**
-  - **No freeze authority, ever** — nobody, including the creator, can freeze holders' tokens.
-  - **Lock supply** (on by default) — revokes mint authority so no more tokens can ever be created.
-  - **Lock name & logo** (optional) — removes the metadata update authority permanently.
-- Shows the estimated cost before you create.
-- After creation: copy the mint address, open it on Solscan, and get guidance on adding a liquidity pool (Raydium / Meteora) so it can trade.
-
-### 5. Token checker
-
-Paste any token mint to see:
-
-- Name, symbol and risk rating with reasons
-- Price, market cap, liquidity, 24h change, 24h trades and pair age
-- Whether **mint authority** and **freeze authority** are still active
-- Links to the chart and to swap
-
-### 6. Trending
-
-- Solana tokens currently getting attention on DexScreener (latest profiles and top boosts).
-- Sort by 24h volume, 24h change, market cap or newest.
-- **Boosted** tokens are labelled — boosts are paid promotion, not organic demand.
-- Quick risk rating (with creator-permission checks) on every row, plus one-click **Check** and **Swap**.
-
-### 7. Watchlist & live alerts
-
-**Watchlist**
-- Follow any wallets — whales, developers, smart traders, your own. Saved only in your browser.
-- Each row shows SOL balance, portfolio value, token count and last activity.
-- **Activity** opens that wallet's last 10 transactions, each explained in plain English (e.g. *"Bought 12.5K BONK for 0.3 SOL"*).
-
-**Live alerts**
-- Polls watched wallets every 30 seconds and shows new activity in an alert feed, with browser notifications.
-- Alert rules: all activity, buys/sells/swaps only, or moves above a SOL threshold.
-- Anything flagged as risky (e.g. an approval or a drainer pattern) always alerts.
-- Runs while OnTrace is open in a browser tab.
-
-### 8. Dev tracker
-
-Paste a token mint to investigate who's behind it:
-
-- **Finds the creator** — the wallet that paid for the token's first transaction (reads the token's history back to the beginning, up to 15,000 transactions). Falls back to the mint authority, or you can paste a known dev wallet.
-- **Dev holdings** — how much of the supply the creator still holds, and their SOL balance.
-- **Dev activity** — the creator's recent moves with this token (buys, sells, transfers), explained in plain English.
-- **Top holders** — the 20 largest holders with % of supply. Pools and program accounts are labelled; the dev is highlighted.
-- **Signals** — warnings for large dev holdings, recent dev selling, and top-10 concentration.
-- One click to **watch** the dev or any holder, or map the dev's connections.
-
-### 9. Wallet graph
-
-- Reads a wallet's last 50, 100 or 200 transactions and finds who it interacts with most (SOL and token counterparties).
-- Draws a **radial graph**: line thickness shows how often they interact; **magenta** lines mean this wallet sent them SOL, **lime** means they sent this wallet SOL.
-- **Grey nodes are programs or pools** (addresses that aren't on the ed25519 curve, so no person holds a key).
-- Click any node to explore that wallet next. A table lists every counterparty with transaction counts, SOL in/out and tokens involved.
-
-### 10. Transaction inspector
-
-Two modes in one box:
-
-- **Paste a transaction signature** → see what happened in plain English, the fee, programs used, warnings, and a full table of balance changes.
-- **Paste an unsigned transaction (base64)** → OnTrace **simulates** it against the current chain state and shows exactly what would change *before anyone signs*.
-
-Drainer detection includes:
-- 🚨 **Token-account ownership hand-over** (the most common Solana drainer trick) → headline changes to *"Do not sign — this transaction looks like a wallet drainer."*
-- ⚠️ New spending approvals (who, and how much)
-- ⚠️ Accounts closed to someone else's address
-- Calls to unrecognised programs
-
----
-
-## Safety model
-
-| Principle | How OnTrace follows it |
-|---|---|
-| **No custody** | OnTrace never holds funds or keys. Your wallet signs everything. |
-| **No seed phrases** | The app never asks for one. If any site claiming to be OnTrace does, it's fake. |
-| **Read-only by default** | Scanning, checking, watching and inspecting never request a signature. |
-| **Minimal instructions** | Cleanup uses only standard Token Program instructions: `CloseAccount` (9), `Burn` (8) and `Revoke` (5). Their encoding was verified byte-for-byte against the official `@solana/spl-token` library. |
-| **Explicit confirmation** | Burns, multi-sends and token creation show a confirmation summary first. Risky swaps need an acknowledgement. |
-| **No backend** | No database, no analytics, no tracking. Watchlists and settings stay in your browser's local storage. |
-| **Transaction guard** | Every transaction is simulated before the wallet opens and blocked if it would hand over accounts, add approvals, move unexpected tokens, short a swap, or overspend SOL. |
-| **No third-party code** | Libraries and fonts are self-hosted; a strict Content Security Policy blocks outside scripts and unknown connections. |
-| **Open source** | This repository *is* the site. What you read here is what runs at ontrace.space. |
-
-See [SECURITY.md](SECURITY.md) for more, including how to report a vulnerability.
-
----
-
-## How the risk ratings work
-
-Ratings combine **live market data** (from DexScreener) with **on-chain mint settings** (read directly from Solana). The highest-level signal wins.
-
-| Signal | Level |
-|---|---|
-| Well-known token (SOL, USDC, USDT, PYUSD, JUP, BONK, mSOL, JitoSOL, JupSOL, bSOL) | No major red flags |
-| Market cap over $100K, more than 100× its liquidity, and fewer than 50 trades in 24h (*fake market cap*) | **Likely scam** |
-| Token-2022 **permanent delegate** (someone can move tokens out of any holder's wallet) | **Likely scam** |
-| No trading market found (often spam airdrops or dead tokens) | High risk |
-| Liquidity under $1,000 (you may not be able to sell) | High risk |
-| **Freeze authority** active (creator can freeze your tokens) | High risk |
-| Mint authority active (creator can mint more) | Caution |
-| Fewer than 10 trades in 24h | Caution |
-| Trading pair less than 24 hours old | Caution |
-| Custom transfer hook (transfers run creator code) | Caution |
-| Transfer fee on every transfer | Caution |
-
-Full details: [docs/RISK-ENGINE.md](docs/RISK-ENGINE.md).
-
-> Ratings are automated signals to help you ask better questions. **"No major red flags" means no automated check found a problem — not that a token is safe.** Ratings are not financial advice and can't catch every scam.
-
----
-
-## Screenshots
-
-| Portfolio & cleanup | Swap |
-|---|---|
-| ![Portfolio](docs/screenshots/portfolio.png) | ![Swap](docs/screenshots/swap.png) |
-
-| Transaction inspector catching a drainer | Footer |
-|---|---|
-| ![Inspector](docs/screenshots/inspector.png) | ![Footer](docs/screenshots/footer.png) |
-
-*Screenshots use sample data.*
-
----
-
-## Tech stack
-
-| Layer | Choice |
-|---|---|
-| App | `index.html` + `app.js` (ES module) + `boot.js`. No framework, no build step for the app itself. |
-| Solana | [`@solana/web3.js`](https://github.com/solana-labs/solana-web3.js) 1.98, [`@solana/spl-token`](https://github.com/solana-labs/solana-program-library) 0.4.9, [`@solana/spl-token-metadata`](https://github.com/solana-labs/solana-program-library) 0.1.6 — **self-hosted** in `vendor/solana.bundle.js` ([verify](vendor/README.md)) |
-| RPC | Any Solana RPC (Helius recommended). Transaction history is fetched directly over JSON-RPC so Solana's newest (version 1) transactions are supported. |
-| Swaps | [Jupiter Swap API](https://dev.jup.ag) (`lite-api.jup.ag/swap/v1`) |
-| Market data | [DexScreener API](https://docs.dexscreener.com) |
-| Wallets | Phantom, Solflare, Backpack (injected providers) |
-| Font | [Orbitron](https://fonts.google.com/specimen/Orbitron), self-hosted in `fonts/` |
-| Hosting | GitHub Pages with a custom domain |
-
----
-
-## Project structure
+## Layout
 
 ```
-ontrace/
-├── index.html              # App page (UI + styles)
-├── app.js                  # App logic (ES module), incl. the transaction guard
-├── boot.js                 # Frame protection + slow-load notice
-├── vendor/                 # Self-hosted Solana library bundle (+ how to rebuild/verify)
-├── fonts/                  # Self-hosted Orbitron font
-├── docs.html               # Full user documentation
-├── faq.html                # Frequently asked questions
-├── security.html           # Plain-English security page
-├── terms.html              # Terms of use and privacy policy
-├── logo.png                # Logo mark (transparent)
-├── favicon.png             # Browser tab icon
-├── apple-touch-icon.png    # Home-screen icon
-├── banner.jpg              # Social preview image (X, Telegram, WhatsApp)
-├── CNAME                   # Custom domain for GitHub Pages (ontrace.space)
-├── .nojekyll               # Serve files as-is on GitHub Pages
-├── README.md               # This file
-├── SECURITY.md             # Security model and vulnerability reporting
-├── CHANGELOG.md            # Release history
-└── docs/
-    ├── ARCHITECTURE.md     # How the code is organised
-    ├── RISK-ENGINE.md      # Risk rating rules in detail
-    ├── DEPLOYMENT.md       # Hosting, custom domain and RPC setup
-    └── screenshots/        # Images used in this README
+program/   Anchor 0.32 program (Rust)
+  programs/ontrace_otc/src/lib.rs
+app/       Next.js 16 web app + Blink endpoints
+  lib/program.ts        hand-written client (used by the browser AND the Blink API)
+  app/api/actions/...   Solana Actions (Blinks)
+  app/actions.json      maps /deal/* to the Action API
+  app/api/og/[offer]    deal card image
+  scripts/e2e.ts        end-to-end test against the compiled program
+  scripts/devnet-setup.ts  mint test tokens on devnet
 ```
 
----
+## How settlement works
 
-## Run it yourself
+1. **create_offer**: stores the terms in an Offer PDA and `approve`s a program-owned delegate PDA for exactly the offered amount. Several offers on the same token stack the allowance.
+2. **take_offer_sol / take_offer_token**: in one transaction, the taker pays the maker and the delegate moves the maker's tokens to the taker. If either leg fails (the maker moved their tokens, or the taker is short), everything reverts.
+3. **cancel_offer**: closes the offer and shrinks or revokes the allowance.
+4. **close_expired**: anyone can clean up an expired offer. Rent goes back to the maker.
 
-No install needed — it's static files.
+Buy offers paid in SOL are wrapped to wSOL automatically and unwrapped for the taker in the same transaction.
+
+## Tested
+
+The program compiles to SBF. `npm test` runs it in LiteSVM using the same client code the site and Blinks use. 33 checks cover:
+- tokens stay with the maker
+- allowance stacking
+- private-deal enforcement and self-trade blocking
+- atomic SOL and token settlement
+- Token-2022
+- SOL wrap and unwrap
+- cancel and revoke
+- unfunded detection
+- expiry, permissionless cleanup and input validation
+
+## Run it (devnet)
+
+### 1. Deploy the program
+Install the [Solana CLI](https://solana.com/docs/intro/installation) and Anchor 0.32.x (`avm install 0.32.1 && avm use 0.32.1`).
 
 ```bash
-git clone https://github.com/davidbasil19/ontrace.git
-cd ontrace
-# Serve over http(s); wallets won't inject into file:// pages
-npx serve .        # or: python3 -m http.server 8080
+cd program
+solana config set -u devnet
+solana airdrop 5            # or use faucet.solana.com
+anchor keys sync            # writes YOUR program id into lib.rs + Anchor.toml
+anchor build                # if your toolchain defaults to a newer SBF arch: cargo build-sbf --arch v0
+anchor deploy
+anchor keys list            # copy the program id
 ```
 
-Open the local URL, pick **Devnet** in the network menu, and connect a wallet set to devnet. Get free devnet SOL at [faucet.solana.com](https://faucet.solana.com).
+### 2. Run the app
+```bash
+cd app
+cp .env.example .env.local   # set NEXT_PUBLIC_PROGRAM_ID to the id from step 1
+npm install
+npm run dev                  # http://localhost:3000
+npm test                     # optional: e2e tests (needs program/target/deploy/ontrace_otc.so)
+```
 
----
+Get test tokens: `npm run devnet:setup -- ~/.config/solana/id.json <your-phantom-address>`. Switch Phantom to devnet, paste a mint into **Create deal**, and use a second wallet as the taker.
 
-## Configuration
+### 3. Host it on ontrace.space (Vercel, free)
+1. vercel.com → sign in with GitHub → **Add New → Project** → import `davidbasil19/ontrace`.
+2. **Root Directory: `app`**. Add env vars from `.env.example` (`NEXT_PUBLIC_CLUSTER`, `NEXT_PUBLIC_PROGRAM_ID`, `NEXT_PUBLIC_SITE_URL=https://ontrace.space`). Deploy.
+3. Project → **Settings → Domains** → add `ontrace.space` and `www.ontrace.space`.
+4. At your domain registrar, replace the old GitHub Pages records with the ones Vercel shows. Usually that's `A @ 76.76.21.21` and `CNAME www cname.vercel-dns.com`. Delete the four `185.199.x.x` A records.
+5. GitHub → repo **Settings → Pages** → set Source to **None**. This repo is no longer a static site.
 
-All settings live at the top of `app.js`.
+### 4. Make Blinks unfurl on X
+1. Test any deal at `https://dial.to/?action=solana-action:https://ontrace.space/api/actions/take/<offer>`. The deal page's **Preview Blink** button does this for you.
+2. Register `ontrace.space` in the Dialect Blinks registry (dial.to → register). X only unfurls registered actions. Until it's approved, links still show the deal-card image and open the site.
 
-| Setting | Purpose |
-|---|---|
-| `DEFAULT_RPC` | RPC URLs per network. Solana's public mainnet endpoint blocks browser requests, so mainnet needs a provider key (e.g. Helius). **Restrict the key to your domain** in the provider dashboard. |
-| `TRUSTED` | Mints treated as well-known/safe. |
-| `BATCH` | Instructions per transaction for each action (sized to stay under Solana's 1,232-byte limit). |
-| `SOL_RESERVE` | SOL kept back when using **Max** in Swap. |
-| `JUP` | Jupiter Swap API base URL. |
+## Before mainnet (please read)
+- **Get an audit.** The program is small and tested, but it moves real money. Have it reviewed before you advertise it.
+- **Use a paid RPC** (Helius, Triton, QuickNode). Public mainnet RPC blocks `getProgramAccounts`, which the offers board relies on. Put the key in `SOLANA_RPC_URL`.
+- Put the program's **upgrade authority** on a multisig (e.g. Squads), or make it immutable once it's stable.
+- Token-2022 tokens with **transfer hooks** aren't supported. Tokens with **transfer fees** deliver slightly less than the listed amount to the taker.
+- Set `NEXT_PUBLIC_CLUSTER=mainnet-beta`. Priority fees default to 20k micro-lamports per CU.
 
-Users can also set their own RPC URL and a priority fee (None / Low / Medium / High) in the **Settings** tab; these are stored only in their browser.
-
----
-
-## Deployment
-
-The site is hosted on **GitHub Pages** from the `main` branch, served at **ontrace.space** via the `CNAME` file.
-
-Short version:
-1. Repo **Settings → Pages** → Source: *Deploy from a branch* → `main` / root.
-2. At your domain registrar, point `ontrace.space` to GitHub Pages (four `A` records plus a `www` CNAME).
-3. Back in **Settings → Pages**, tick **Enforce HTTPS** once the certificate is issued.
-
-Step-by-step instructions, DNS values and RPC key hardening: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
-
----
-
-## Testing & verification
-
-| What | How it was checked |
-|---|---|
-| Cleanup instructions | `CloseAccount`, `Burn` and `Revoke` encodings compared byte-for-byte with `@solana/spl-token`, for both Token Program and Token-2022. |
-| Transaction sizes | Worst-case batches serialized and measured: cleanup ≤ 1,022 B; SOL multi-send (18) 1,092 B; token multi-send (5) 793 B; token creation with both locks 1,005 B — all under the 1,232 B limit. |
-| Token creation | Full instruction set simulated successfully on Solana devnet. |
-| Swaps | Jupiter quote and swap-transaction endpoints tested live; returned transactions deserialize correctly. |
-| Simulator | On devnet: a token-account ownership hand-over is flagged as a drainer; an approval shows the correct spender; a SOL transfer is explained correctly. |
-| Mainnet RPC | Wallet scan (2,800+ accounts), mint-authority reads and transaction history (including version-1 transactions) tested against a live Helius endpoint. |
-| Market data | DexScreener token, profile and boost endpoints tested live. |
-
-Before any major release, run through the app end-to-end on **devnet** with a throwaway wallet.
-
----
-
-## Known limitations
-
-- **Alerts** only run while OnTrace is open in a browser tab.
-- **Explanations** are rule-based, not AI-generated. Complex DeFi transactions may get a general description.
-- **Simulator** can't decode unsigned transactions in Solana's newest (version 1) format yet — inspect them by signature after they're sent.
-- **Dev tracker** reads up to 15,000 transactions to find a creator; for busier tokens, paste the dev wallet manually.
-- **Mobile**: wallets inject into their own in-app browsers. On phones, the Connect button offers "Open in Phantom / Solflare"; other wallets can open ontrace.space in their built-in browser.
-- Wallets supported: Phantom, Solflare, Backpack (others that expose `window.solana` may work).
-- The intelligence tools make many RPC calls; heavy public use needs a paid RPC plan.
-
----
-
-## Roadmap
-
-**Done**
-- ✅ "Open in Phantom / Solflare" buttons for mobile
-- ✅ Front page intro, FAQ, Security and Terms & Privacy pages
-
-**Next**
-- ✅ Transaction guard, self-hosted code and Content Security Policy
-- Wallet Standard support (OKX, Coinbase Wallet and more)
-- Optional platform fee on swaps to fund development
-
-**Phase 3**
-- 24/7 alerts via Telegram bot
-- Site checker for known drainer and phishing domains
-- Logo upload with hosted token metadata
-- Profit & loss history
-- **$ONTRACE** holder features (more watchlist slots, alerts, deeper traces)
-
----
-
-## FAQ
-
-**Is OnTrace free?**
-OnTrace charges no platform fees. Standard Solana network fees apply (usually a fraction of a cent), plus an optional priority fee and refundable account deposits for some actions.
-
-**Can OnTrace take my funds?**
-No. It can only ask your wallet to sign transactions, and your wallet shows each one before you approve. It never sees your seed phrase.
-
-**Do I need to configure anything?**
-No. ontrace.space has a built-in RPC connection. (If you self-host, Solana's free public endpoint blocks browser requests, so set your own provider key in `DEFAULT_RPC` — see [Configuration](#configuration).)
-
-**What happens when I "reclaim SOL"?**
-OnTrace closes token accounts that hold zero tokens. Each one returns its rent deposit (about 0.002 SOL) to you. Accounts with tokens in them are never touched.
-
-**Why are some tokens rated "Likely scam"?**
-Usually because their market cap looks fake (huge valuation, tiny liquidity, almost no trades) or because someone can move tokens out of holders' wallets. See [How the risk ratings work](#how-the-risk-ratings-work).
-
-**Is my watchlist private?**
-Yes. It's stored only in your browser and never sent anywhere except the RPC calls needed to read public blockchain data.
-
-**Does it work on my phone?**
-Yes. Tap **Connect wallet** on your phone and choose "Open in Phantom" or "Open in Solflare" — OnTrace opens inside the wallet's browser. More answers on the [FAQ page](https://ontrace.space/faq.html).
-
----
-
-## Contributing & reporting issues
-
-- **Bugs and ideas:** open an issue on this repository.
-- **Security vulnerabilities:** please report privately — see [SECURITY.md](SECURITY.md).
-- **Contact:** [team@ontrace.space](mailto:team@ontrace.space) · [@0ntrace](https://x.com/0ntrace)
-
----
-
-## Disclaimer
-
-OnTrace is provided as-is, without warranty of any kind. Risk ratings, explanations and simulations are automated and may be incomplete or wrong. Nothing in this app or repository is financial, legal or tax advice. Crypto assets are volatile and you can lose money. Always do your own research and only sign transactions you understand.
-
-## License
-
-Copyright © 2026 OnTrace. All rights reserved.
-
-The source code is published so anyone can review and verify exactly what runs at ontrace.space. No license is granted to reuse, modify or redistribute it without permission. For licensing enquiries, contact [team@ontrace.space](mailto:team@ontrace.space).
+## Easy next upgrades
+- Partial fills and RFQ / best-bid auctions (extend `Offer` with `remaining`)
+- Token safety scores and counterparty reputation on every offer
+- Telegram bot and "whale radar" alerts (Helius webhooks on the program)
+- An indexer (Helius webhooks into a database) once offer volume outgrows `getProgramAccounts`
+- Optional fee in bps to a treasury, if you want platform revenue on top of token fees

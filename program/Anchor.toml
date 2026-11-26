@@ -1,0 +1,13 @@
+[toolchain]
+anchor_version = "0.32.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.devnet]
+ontrace_otc = "BDyKHqh2MgQSSjFTSeL1i47LeVyezsTqGMDneo846eN6"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
