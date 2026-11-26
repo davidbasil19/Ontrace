@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: `${BRAND.product} — trade Solana tokens wallet-to-wallet`,
   description: BRAND.pitch,
-  openGraph: { title: `${BRAND.name} — ${BRAND.tagline}`, description: BRAND.pitch, images: ["/banner.jpg"] },
-  twitter: { card: "summary_large_image", site: `@${BRAND.x}` },
+  openGraph: { title: `${BRAND.name} — ${BRAND.tagline}`, description: BRAND.pitch, images: ["/og.png"] },
+  twitter: { card: "summary_large_image", site: `@${BRAND.x}`, images: ["/og.png"] },
   icons: { icon: "/favicon.png", apple: "/apple-touch-icon.png" },
 };
 
