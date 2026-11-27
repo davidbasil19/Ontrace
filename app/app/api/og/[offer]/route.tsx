@@ -3,14 +3,13 @@ import { dealImage } from "@/lib/dealImage";
 import { BRAND } from "@/lib/brand";
 import { dealView } from "@/lib/deal";
 import { getTokens } from "@/lib/market";
-import { fetchOffer } from "@/lib/program";
-import { offerToJSON } from "@/lib/serialize";
-import { serverConn } from "@/lib/server";
+import { getDeal, toJSON } from "@/lib/dealServer";
 
 // Deal card image used as the Blink icon and the X/Twitter card.
 export async function GET(_req: Request, { params }: { params: Promise<{ offer: string }> }) {
   const { offer: address } = await params;
-  const offer = await fetchOffer(serverConn, address).catch(() => null);
+  const rec = await getDeal(address).catch(() => null);
+  const offer = rec && rec.state === "open" ? toJSON(rec) : null;
   const size = { width: 1200, height: 1200 };
   if (!offer) {
     return new ImageResponse(
@@ -22,7 +21,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ offer: 
       size,
     );
   }
-  const json = offerToJSON(offer);
+  const json = offer;
   const t = await getTokens([offer.giveMint, offer.wantMint]);
   const v = dealView(json, t[offer.giveMint], t[offer.wantMint]);
   return dealImage(v, offer);

@@ -1,11 +1,7 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import type { Transaction } from "@solana/web3.js";
+import { useCallback, useEffect, useState } from "react";
 import type { TokenInfo } from "./market";
 import type { OfferJSON } from "./serialize";
-import { explorerTx } from "./config";
-import { useToast } from "@/components/Toast";
 
 export function useJson<T>(url: string | null, pollMs = 0) {
   const [data, setData] = useState<T | null>(null);
@@ -47,45 +43,3 @@ export function useTokens(mints: string[]) {
 }
 
 export const useOffers = (query: string, pollMs = 20000) => useJson<OfferJSON[]>(`/api/offers?${query}`, pollMs);
-
-/** Sign, send and confirm a legacy transaction with toasts. */
-export function useSendTx() {
-  const { connection } = useConnection();
-  const { sendTransaction, publicKey } = useWallet();
-  const toast = useToast();
-  const busy = useRef(false);
-  const [pending, setPending] = useState(false);
-  const send = useCallback(
-    async (build: () => Promise<Transaction>, okText: string) => {
-      if (!publicKey) return toast("Connect a wallet first", "err"), null;
-      if (busy.current) return null;
-      busy.current = true;
-      setPending(true);
-      try {
-        const tx = await build();
-        const sim = await connection.simulateTransaction(tx);
-        if (sim.value.err) {
-          const msg = sim.value.logs?.find((l) => l.includes("Error Message:"))?.split("Error Message:")[1];
-          throw new Error(msg?.trim() || JSON.stringify(sim.value.err));
-        }
-        const sig = await sendTransaction(tx, connection, { skipPreflight: true });
-        toast("Submitted…", "info", explorerTx(sig));
-        const res = await connection.confirmTransaction(
-          { signature: sig, blockhash: tx.recentBlockhash!, lastValidBlockHeight: tx.lastValidBlockHeight! },
-          "confirmed",
-        );
-        if (res.value.err) throw new Error("Transaction failed on-chain");
-        toast(okText, "ok", explorerTx(sig));
-        return sig;
-      } catch (e) {
-        toast((e as Error).message ?? "Transaction failed", "err");
-        return null;
-      } finally {
-        busy.current = false;
-        setPending(false);
-      }
-    },
-    [connection, publicKey, sendTransaction, toast],
-  );
-  return { send, pending };
-}

@@ -1,4 +1,4 @@
-import { clusterApiUrl, PublicKey } from "@solana/web3.js";
+import { clusterApiUrl } from "@solana/web3.js";
 
 export type Cluster = "devnet" | "mainnet-beta";
 export const CLUSTER = (process.env.NEXT_PUBLIC_CLUSTER ?? "devnet") as Cluster;
@@ -7,9 +7,6 @@ export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl(CLUSTER)
 /** Server-side RPC (keep paid keys out of the browser bundle if you like). */
 export const SERVER_RPC_URL = process.env.SOLANA_RPC_URL || RPC_URL;
 
-export const PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_PROGRAM_ID ?? "BDyKHqh2MgQSSjFTSeL1i47LeVyezsTqGMDneo846eN6",
-);
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 

@@ -6,8 +6,9 @@ import { PublicKey } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { EXPIRY_OPTIONS, NATIVE_MINT_STR, PAYMENT_ASSETS } from "@/lib/config";
 import { fmtNum, fmtPct, short, toRaw } from "@/lib/format";
-import { useSendTx, useTokens } from "@/lib/hooks";
-import { buildCreateOfferTx, getMintMeta } from "@/lib/program";
+import { useTokens } from "@/lib/hooks";
+import { getMintMeta } from "@/lib/deals";
+import { useDeals } from "@/lib/useDeals";
 import TokenBadge from "./TokenBadge";
 
 const isKey = (s: string) => {
@@ -23,7 +24,7 @@ export default function CreateDealForm() {
   const router = useRouter();
   const { connection } = useConnection();
   const { publicKey } = useWallet();
-  const { send, pending } = useSendTx();
+  const { create, busy: pending } = useDeals();
 
   const [side, setSide] = useState<"SELL" | "BUY">((sp.get("side") as "BUY") === "BUY" ? "BUY" : "SELL");
   const [mint, setMint] = useState(sp.get("mint") ?? "");
@@ -95,20 +96,15 @@ export default function CreateDealForm() {
     const tokenRaw = toRaw(amount, token.decimals);
     const payRaw = toRaw(payAmt.toFixed(pay.decimals), pay.decimals);
     if (payRaw === 0n) return;
-    let offer = "";
-    const sig = await send(async () => {
-      const r = await buildCreateOfferTx(connection, publicKey!, {
-        giveMint: side === "SELL" ? token.mint : pay.mint,
-        giveAmount: side === "SELL" ? tokenRaw : payRaw,
-        wantMint: side === "SELL" ? pay.mint : token.mint,
-        wantAmount: side === "SELL" ? payRaw : tokenRaw,
-        taker: cp === "wallet" ? taker.trim() : null,
-        expiresAt: Math.floor(Date.now() / 1000) + expiry,
-      });
-      offer = r.offer;
-      return r.tx;
-    }, "Deal is live. Share the link!");
-    if (sig && offer) router.push(`/deal/${offer}?new=1`);
+    const id = await create({
+      giveMint: side === "SELL" ? token.mint : pay.mint,
+      giveAmount: side === "SELL" ? tokenRaw : payRaw,
+      wantMint: side === "SELL" ? pay.mint : token.mint,
+      wantAmount: side === "SELL" ? payRaw : tokenRaw,
+      taker: cp === "wallet" ? taker.trim() : null,
+      expiresAt: Math.floor(Date.now() / 1000) + expiry,
+    });
+    if (id) router.push(`/deal/${id}?new=1`);
   }
 
   return (
@@ -167,10 +163,15 @@ export default function CreateDealForm() {
 
       <Field label="Counterparty">
         <div className="flex gap-2">
-          <button className={`tab border border-line ${cp === "open" ? "tab-on" : ""}`} onClick={() => setCp("open")}>Anyone</button>
-          <button className={`tab border border-line ${cp === "wallet" ? "tab-on" : ""}`} onClick={() => setCp("wallet")}>Specific wallet 🔒</button>
+          <button className={`tab border border-line ${cp === "open" ? "tab-on" : ""}`} onClick={() => setCp("open")}>Anyone (request)</button>
+          <button className={`tab border border-line ${cp === "wallet" ? "tab-on" : ""}`} onClick={() => setCp("wallet")}>Specific wallet (instant) 🔒</button>
         </div>
         {cp === "wallet" && <input className="input mt-2 font-mono" placeholder="Counterparty wallet address" value={taker} onChange={(e) => setTaker(e.target.value)} />}
+        <p className="mt-2 text-xs text-muted">
+          {cp === "open"
+            ? "Anyone can request your deal. You confirm the buyer with one signature, then they complete it. Listing is free."
+            : "You sign the deal now for this wallet only. They can take it instantly from the link."}
+        </p>
       </Field>
 
       <Field label="Expires in">
@@ -186,14 +187,14 @@ export default function CreateDealForm() {
         <Row k="You receive" v={side === "SELL" ? `${fmtNum(payAmt)} ${pay?.symbol ?? ""}` : `${fmtNum(tokenAmt)} ${token?.symbol ?? ""}`} />
         <Row k="Price" v={price ? `${fmtNum(price, 10)} ${pay?.symbol} / token` : "—"} />
         <Row k="vs market" v={fmtPct(vs)} />
-        <Row k="Counterparty" v={cp === "open" ? "Anyone" : isKey(taker) ? short(taker.trim(), 6) : "—"} />
+        <Row k="Counterparty" v={cp === "open" ? "Anyone (you confirm)" : isKey(taker) ? short(taker.trim(), 6) : "—"} />
         <Row k="Platform fee" v="0% · network fee only" />
-        <p className="mt-3 text-xs text-muted">Your tokens stay in your wallet. You approve this program to move only this amount, and only when someone takes the deal in one atomic transaction. Cancel any time.</p>
+        <p className="mt-3 text-xs text-muted">Your tokens stay in your wallet. You sign the exact swap, so nobody can change the terms, and both sides move in one transaction or nothing moves. Cancel any time.{cp === "wallet" && " First deal only: a one-time, refundable deposit of ~0.0015 SOL keeps your signed deal valid for days."}</p>
       </div>
 
       {problems.length > 0 && publicKey && <p className="text-xs text-down">{problems[0]}</p>}
       <button className="btn-accent w-full !py-3" disabled={!publicKey || problems.length > 0 || pending} onClick={submit}>
-        {!publicKey ? "Connect wallet to create" : pending ? "Signing…" : "Create deal & get Blink link"}
+        {!publicKey ? "Connect wallet to create" : pending ? "Signing…" : cp === "open" ? "List deal & get Blink link" : "Sign deal & get Blink link"}
       </button>
     </div>
   );

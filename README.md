@@ -26,89 +26,70 @@ A non-custodial, wallet-to-wallet OTC desk for any Solana token. It has everythi
 | **Dynamic deal cards** | Auto-generated image per deal (amount, price, discount, expiry) for X previews and Blinks |
 | 0% platform fee | Only the network fee |
 
-## Layout
+## How it works ($0 to launch, no custom program)
+
+Every deal is **one Solana transaction that swaps both sides at once**. It uses only programs already on every Solana network (System, Token, Token-2022, Associated Token, Memo), so there's nothing to deploy and no deploy cost.
+
+- **Instant (private) deals.** The seller names the buyer and signs the exact swap. Any change breaks the signature. The buyer adds their signature and it settles.
+- **Request (open) deals.** Anyone can request. The seller confirms a buyer with one signature, which turns it into an instant deal for them. If the seller confirms several buyers, the first to complete wins and the rest fail safely.
+- **Durable nonces ("deposits").** A signed deal stays valid for days because it's tied to a small, reusable, refundable nonce account (~0.0015 SOL) owned by the seller. **Cancel** = advance the nonce, which kills every copy of the signed deal. Free deposits can be reclaimed from *My deals*.
+- **The site never holds funds or keys.** It stores signed deals (Upstash Redis), checks them against the chain, and shows them. The buyer pays the network fee.
 
 ```
-program/   Anchor 0.32 program (Rust)
-  programs/ontrace_otc/src/lib.rs
-app/       Next.js 16 web app + Blink endpoints
-  lib/program.ts        hand-written client (used by the browser AND the Blink API)
-  app/api/actions/...   Solana Actions (Blinks)
-  app/actions.json      maps /deal/* to the Action API
-  app/api/og/[offer]    deal card image
-  scripts/e2e.ts        end-to-end test against the compiled program
-  scripts/devnet-setup.ts  mint test tokens on devnet
+app/                 Next.js 16 site + API + Blinks
+  lib/deals.ts       swap builder, nonce helpers, signature checks (browser + server)
+  lib/dealServer.ts  validation, storage, on-chain status (filled / cancelled / unfunded)
+  lib/useDeals.ts    wallet actions: create, request, confirm, take, cancel, reclaim
+  app/api/deals/...  deal API
+  app/api/actions/   Solana Actions (Blinks)
+  scripts/e2e.ts     49-check end-to-end test against a local Solana VM
+program/             optional upgrade: an on-chain program that makes open deals instant
 ```
-
-## How settlement works
-
-1. **create_offer**: stores the terms in an Offer PDA and `approve`s a program-owned delegate PDA for exactly the offered amount. Several offers on the same token stack the allowance.
-2. **take_offer_sol / take_offer_token**: in one transaction, the taker pays the maker and the delegate moves the maker's tokens to the taker. If either leg fails (the maker moved their tokens, or the taker is short), everything reverts.
-3. **cancel_offer**: closes the offer and shrinks or revokes the allowance.
-4. **close_expired**: anyone can clean up an expired offer. Rent goes back to the maker.
-
-Buy offers paid in SOL are wrapped to wSOL automatically and unwrapped for the taker in the same transaction.
 
 ## Tested
 
-The program compiles to SBF. `npm test` runs it in LiteSVM using the same client code the site and Blinks use. 33 checks cover:
-- tokens stay with the maker
-- allowance stacking
-- private-deal enforcement and self-trade blocking
-- atomic SOL and token settlement
+`npm test` runs the real deal engine and server logic against LiteSVM, a local Solana VM. The 49 checks cover:
+- instant deals and request → confirm → buy
+- tampered terms and fake signatures
+- replay protection
+- cancel invalidating copies already handed out
+- unfunded sellers
+- expiry
 - Token-2022
-- SOL wrap and unwrap
-- cancel and revoke
-- unfunded detection
-- expiry, permissionless cleanup and input validation
+- native SOL on both sides
+- deposit reuse and reclaim
 
-## Run it (devnet)
+## Run it
 
-### 1. Deploy the program
-Install the [Solana CLI](https://solana.com/docs/intro/installation) and Anchor 0.32.x (`avm install 0.32.1 && avm use 0.32.1`).
-
-```bash
-cd program
-solana config set -u devnet
-solana airdrop 5            # or use faucet.solana.com
-anchor keys sync            # writes YOUR program id into lib.rs + Anchor.toml
-anchor build                # if your toolchain defaults to a newer SBF arch: cargo build-sbf --arch v0
-anchor deploy
-anchor keys list            # copy the program id
-```
-
-### 2. Run the app
 ```bash
 cd app
-cp .env.example .env.local   # set NEXT_PUBLIC_PROGRAM_ID to the id from step 1
+cp .env.example .env.local
 npm install
-npm run dev                  # http://localhost:3000
-npm test                     # optional: e2e tests (needs program/target/deploy/ontrace_otc.so)
+npm run dev     # http://localhost:3000 (uses an in-memory store locally)
+npm test
 ```
 
-Get test tokens: `npm run devnet:setup -- ~/.config/solana/id.json <your-phantom-address>`. Switch Phantom to devnet, paste a mint into **Create deal**, and use a second wallet as the taker.
+**On Vercel:**
+1. Root Directory `app`.
+2. **Storage → Upstash Redis** (free) → connect to the project. This adds `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
+3. Set `NEXT_PUBLIC_CLUSTER`, `NEXT_PUBLIC_SITE_URL`, and the Helius RPC URLs (`NEXT_PUBLIC_RPC_URL`, `SOLANA_RPC_URL`).
 
-### 3. Host it on ontrace.space (Vercel, free)
-1. vercel.com → sign in with GitHub → **Add New → Project** → import `davidbasil19/ontrace`.
-2. **Root Directory: `app`**. Add env vars from `.env.example` (`NEXT_PUBLIC_CLUSTER`, `NEXT_PUBLIC_PROGRAM_ID`, `NEXT_PUBLIC_SITE_URL=https://ontrace.space`). Deploy.
-3. Project → **Settings → Domains** → add `ontrace.space` and `www.ontrace.space`.
-4. At your domain registrar, replace the old GitHub Pages records with the ones Vercel shows. Usually that's `A @ 76.76.21.21` and `CNAME www cname.vercel-dns.com`. Delete the four `185.199.x.x` A records.
-5. GitHub → repo **Settings → Pages** → set Source to **None**. This repo is no longer a static site.
+**Domain:**
+1. In Vercel → Settings → Domains, add `ontrace.space`.
+2. At your registrar, point the A record at the IP Vercel shows.
+3. Turn off GitHub Pages.
 
-### 4. Make Blinks unfurl on X
-1. Test any deal at `https://dial.to/?action=solana-action:https://ontrace.space/api/actions/take/<offer>`. The deal page's **Preview Blink** button does this for you.
-2. Register `ontrace.space` in the Dialect Blinks registry (dial.to → register). X only unfurls registered actions. Until it's approved, links still show the deal-card image and open the site.
+**Blinks:** register `ontrace.space` in the Dialect registry (dial.to) so deal links unfurl on X.
 
 ## Before mainnet (please read)
-- **Get an audit.** The program is small and tested, but it moves real money. Have it reviewed before you advertise it.
-- **Use a paid RPC** (Helius, Triton, QuickNode). Public mainnet RPC blocks `getProgramAccounts`, which the offers board relies on. Put the key in `SOLANA_RPC_URL`.
-- Put the program's **upgrade authority** on a multisig (e.g. Squads), or make it immutable once it's stable.
-- Token-2022 tokens with **transfer hooks** aren't supported. Tokens with **transfer fees** deliver slightly less than the listed amount to the taker.
+- Run the devnet test with two real wallets first. Some wallets show an extra notice for pre-signed (durable nonce) transactions.
+- **Get a review.** No funds are held, but people sign real trades here. Have someone review `lib/deals.ts` and `lib/dealServer.ts` before you promote it heavily.
+- **Use a Helius (free) RPC.** The public RPC is rate-limited.
+- Token-2022 tokens with **transfer hooks** aren't supported. Tokens with **transfer fees** deliver slightly less than the listed amount.
 - Set `NEXT_PUBLIC_CLUSTER=mainnet-beta`. Priority fees default to 20k micro-lamports per CU.
 
 ## Easy next upgrades
-- Partial fills and RFQ / best-bid auctions (extend `Offer` with `remaining`)
-- Token safety scores and counterparty reputation on every offer
-- Telegram bot and "whale radar" alerts (Helius webhooks on the program)
-- An indexer (Helius webhooks into a database) once offer volume outgrows `getProgramAccounts`
-- Optional fee in bps to a treasury, if you want platform revenue on top of token fees
+- Instant open deals: deploy the slim version of `program/` (needs ~0.5 SOL)
+- Trade-from-the-tweet: Jupiter swap Blinks with referral fees
+- Telegram / email alerts for new requests
+- Token safety scores and counterparty reputation

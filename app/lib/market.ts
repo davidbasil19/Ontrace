@@ -3,7 +3,7 @@
 import "server-only";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { NATIVE_MINT_STR, SERVER_RPC_URL, USDC_MINT_STR } from "./config";
-import { getMintMeta } from "./program";
+import { getMintMeta } from "./deals";
 
 export interface TokenInfo {
   mint: string;

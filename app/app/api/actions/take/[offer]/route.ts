@@ -1,59 +1,58 @@
-import {
-  createActionHeaders,
-  createPostResponse,
-  type ActionGetResponse,
-  type ActionPostRequest,
-  type ActionPostResponse,
-} from "@solana/actions";
+import { createActionHeaders, type ActionGetResponse, type ActionPostRequest, type ActionPostResponse } from "@solana/actions";
 import { PublicKey } from "@solana/web3.js";
 import { BRAND } from "@/lib/brand";
 import { CLUSTER, SITE_URL } from "@/lib/config";
 import { dealHeadline, dealSubline, dealView } from "@/lib/deal";
+import { getDeal, refresh, toJSON, txFor } from "@/lib/dealServer";
 import { getTokens } from "@/lib/market";
-import { buildTakeTx, fetchOffer, offerStatuses } from "@/lib/program";
-import { offerToJSON } from "@/lib/serialize";
-import { serverConn } from "@/lib/server";
 
 const headers = createActionHeaders({ chainId: CLUSTER === "devnet" ? "devnet" : "mainnet", actionVersion: "2.4" });
 type Ctx = { params: Promise<{ offer: string }> };
 
-async function load(address: string) {
-  const offer = await fetchOffer(serverConn, address);
-  if (!offer) return null;
-  const status = (await offerStatuses(serverConn, [offer]))[offer.address];
-  const json = offerToJSON(offer, status);
-  const t = await getTokens([offer.giveMint, offer.wantMint]);
-  const v = dealView(json, t[offer.giveMint], t[offer.wantMint]);
-  return { offer, json, status, v };
+async function load(id: string) {
+  const rec = await getDeal(id);
+  if (!rec) return null;
+  const d = await refresh(rec);
+  const json = toJSON(d);
+  const t = await getTokens([d.giveMint, d.wantMint]);
+  return { rec: d, json, v: dealView(json, t[d.giveMint], t[d.wantMint]) };
 }
 
 export async function GET(_req: Request, { params }: Ctx) {
-  const { offer: address } = await params;
-  const icon = `${SITE_URL}/api/og/${address}`;
-  const d = await load(address).catch(() => null);
-  if (!d) {
+  const { offer: id } = await params;
+  const x = await load(id).catch(() => null);
+  if (!x || x.rec.state !== "open") {
     const body: ActionGetResponse = {
       type: "action",
       icon: `${SITE_URL}/logo.png`,
       title: BRAND.product,
-      description: "This deal was already taken or cancelled.",
+      description: x?.rec.state === "filled" ? "This deal was filled." : "This deal was taken or cancelled.",
       label: "Deal closed",
       disabled: true,
     };
     return Response.json(body, { headers });
   }
-  const { json, status, v } = d;
+  const { json, v, rec } = x;
+  const live = json.status === "live";
   const label =
-    v.side === "SELL" ? `Buy for ${+v.payAmount.toFixed(6)} ${v.pay.symbol}` : `Sell ${+v.tokenAmount.toFixed(6)} $${v.token.symbol}`;
+    rec.kind === "request"
+      ? "Take deal"
+      : v.side === "SELL"
+        ? `Buy for ${+v.payAmount.toFixed(6)} ${v.pay.symbol}`
+        : `Sell ${+v.tokenAmount.toFixed(6)} $${v.token.symbol}`;
+  const how =
+    rec.kind === "request"
+      ? "Open deal: tap to request, the seller confirms, then you complete it."
+      : "Private deal: only the named wallet can take it.";
   const body: ActionGetResponse = {
     type: "action",
-    icon,
+    icon: `${SITE_URL}/api/og/${id}`,
     title: `${dealHeadline(v)} · ${BRAND.product}`,
-    description: `${dealSubline(json, v)}. Settles atomically wallet-to-wallet, no escrow.`,
+    description: `${dealSubline(json, v)}. ${how} Settles wallet-to-wallet in one transaction, no escrow.`,
     label,
-    disabled: status !== "live",
-    ...(status !== "live" && { error: { message: status === "expired" ? "This deal has expired." : "Maker no longer has the tokens." } }),
-    links: { actions: [{ type: "transaction", label, href: `/api/actions/take/${address}` }] },
+    disabled: !live,
+    ...(!live && { error: { message: json.status === "expired" ? "This deal has expired." : "The seller no longer holds enough to cover it." } }),
+    links: { actions: [{ type: "transaction", label, href: `/api/actions/take/${id}` }] },
   };
   return Response.json(body, { headers });
 }
@@ -61,19 +60,23 @@ export async function GET(_req: Request, { params }: Ctx) {
 export const OPTIONS = async () => new Response(null, { headers });
 
 export async function POST(req: Request, { params }: Ctx) {
-  const { offer: address } = await params;
+  const { offer: id } = await params;
   try {
-    const body: ActionPostRequest = await req.json();
-    const account = new PublicKey(body.account);
-    const d = await load(address);
-    if (!d) throw new Error("Deal not found — it may already be taken.");
-    if (d.status !== "live") throw new Error(d.status === "expired" ? "This deal has expired." : "Maker no longer has the tokens.");
-    if (d.offer.taker && d.offer.taker !== account.toBase58()) throw new Error("This is a private deal for another wallet.");
-    if (d.offer.maker === account.toBase58()) throw new Error("You can't take your own deal.");
-    const tx = await buildTakeTx(serverConn, account, d.offer);
-    const payload: ActionPostResponse = await createPostResponse({
-      fields: { type: "transaction", transaction: tx, message: `${dealHeadline(d.v)} — deal done on ${BRAND.product}.` },
-    });
+    const { account } = (await req.json()) as ActionPostRequest;
+    const who = new PublicKey(account).toBase58();
+    const x = await load(id);
+    if (!x || x.rec.state !== "open") throw new Error("This deal is closed.");
+    if (x.json.status !== "live") throw new Error(x.json.status === "expired" ? "This deal has expired." : "The seller no longer holds enough.");
+    if (who === x.rec.maker) throw new Error("You can't take your own deal.");
+    const tx = txFor(x.rec, who);
+    if (tx) {
+      // Seller already signed for this wallet: the wallet adds its signature and sends.
+      const payload: ActionPostResponse = { type: "transaction", transaction: tx, message: `${dealHeadline(x.v)}. Deal done on ${BRAND.product}.` };
+      return Response.json(payload, { headers });
+    }
+    if (x.rec.kind === "instant") throw new Error("This is a private deal for another wallet.");
+    // Open deal, no confirmation yet: send them to request it.
+    const payload: ActionPostResponse = { type: "external-link", externalLink: `${SITE_URL}/deal/${id}?request=1`, message: "Request this deal on OnTrace." };
     return Response.json(payload, { headers });
   } catch (e) {
     return Response.json({ message: (e as Error).message }, { status: 400, headers });

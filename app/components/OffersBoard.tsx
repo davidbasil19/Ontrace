@@ -58,14 +58,14 @@ export default function OffersBoard({ query = "", title = "Active OTC offers", e
             {!loading && !rows.length && <tr><td colSpan={8} className="px-3 py-8 text-center text-muted">{empty ?? "No open offers yet. Be the first."}</td></tr>}
             {rows.map(({ o, v }) => (
               <tr key={o.address} className="border-t border-line hover:bg-line/40">
-                <td className="px-3 py-2"><SideTag side={v.side} /> {o.taker && <span title={`Private for ${o.taker}`}>🔒</span>}</td>
+                <td className="whitespace-nowrap px-3 py-2"><SideTag side={v.side} /> <KindTag kind={(o as DealLike).kind} /></td>
                 <td className="px-3 py-2"><Link href={`/token/${v.token.mint}`}><TokenBadge icon={v.token.icon} symbol={v.token.symbol} size={22} /></Link></td>
                 <td className="px-3 py-2 text-right font-mono">{fmtNum(v.tokenAmount)}</td>
                 <td className="px-3 py-2 text-right font-mono">{fmtNum(v.price, 8)} {v.pay.symbol}</td>
                 <td className={`px-3 py-2 text-right font-mono ${goodDeal(v.side, v.vsMarket) ? "text-up" : "text-down"}`}>{fmtPct(v.vsMarket)}</td>
                 <td className="px-3 py-2 text-right font-mono text-muted">{timeLeft(o.expiresAt)}</td>
                 <td className="px-3 py-2 font-mono text-xs"><Link href={`/wallet/${o.maker}`} className="hover:text-accent">{short(o.maker)}</Link></td>
-                <td className="px-3 py-2 text-right"><Link className="btn-accent !py-1 text-xs" href={`/deal/${o.address}`}>{v.side === "SELL" ? "Buy" : "Sell"}</Link></td>
+                <td className="px-3 py-2 text-right"><Link className="btn-accent !py-1 text-xs" href={`/deal/${o.address}`}>{(o as DealLike).kind === "request" ? "Request" : v.side === "SELL" ? "Buy" : "Sell"}</Link></td>
               </tr>
             ))}
           </tbody>
@@ -81,4 +81,11 @@ const score = ({ v }: { v: ReturnType<typeof dealView> }) => (v.vsMarket == null
 export const SideTag = ({ side }: { side: "SELL" | "BUY" }) => (
   <span className={`rounded px-1.5 py-0.5 text-[11px] font-bold ${side === "SELL" ? "bg-down/15 text-down" : "bg-up/15 text-up"}`}>{side}</span>
 );
+type DealLike = OfferJSON & { kind?: "instant" | "request" };
+export const KindTag = ({ kind }: { kind?: "instant" | "request" }) =>
+  kind === "request" ? (
+    <span title="Open deal: request it, the seller confirms" className="rounded bg-signal/10 px-1.5 py-0.5 text-[11px] font-bold text-signal">REQUEST</span>
+  ) : (
+    <span title="Private deal: the named wallet can take it instantly" className="rounded bg-accent/10 px-1.5 py-0.5 text-[11px] font-bold text-accent">INSTANT 🔒</span>
+  );
 export type { OfferJSON };
